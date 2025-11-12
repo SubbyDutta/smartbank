@@ -4,7 +4,7 @@ import axios from 'axios';
 
 
 const API = axios.create({
- baseURL:  "subbybankbackend.onrender.com/api",
+  baseURL: "https://subbybankbackend.onrender.com/api",
 });
 
 
