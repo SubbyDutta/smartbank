@@ -346,7 +346,7 @@ export default function UsersView({
             background: BG_COLOR,
             padding: 16,
             borderRadius: 4,
-            marginBottom: 20,
+            marginBottom: 60,
             border: `1px solid ${BORDER_COLOR}`,
           }}
         >
@@ -580,79 +580,8 @@ export default function UsersView({
                   </td>
                 </tr>
                 <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.75rem",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      padding: "8px",
-                    }}
-                  >
-                    Balance (INR)
-                  </th>
-                  <td style={{ padding: "8px" }}>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input
-                        name="balance"
-                        value={editForm.balance ?? ""}
-                        onChange={(e) => setEditForm((p) => ({ ...p, balance: e.target.value }))}
-                        type="number"
-                        step="0.01"
-                        style={{
-                          flex: 1,
-                          padding: "6px 8px",
-                          borderRadius: 4,
-                          border: `1px solid ${BORDER_COLOR}`,
-                          background: CARD_BG,
-                          color: TEXT_COLOR,
-                          fontSize: "0.8rem",
-                          outline: "none",
-                        }}
-                      />
-                      <motion.button
-                        onClick={saveBalance}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                          background: "linear-gradient(135deg, #10b981, #059669)",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 4,
-                          padding: "6px 10px",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          fontSize: "0.7rem",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        <DollarSign size={12} /> Save
-                      </motion.button>
-                      <motion.button
-                        onClick={() => onSearchUser(editForm.id)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                          background: "transparent",
-                          border: `1px solid ${BORDER_COLOR}`,
-                          color: "#6b7280",
-                          borderRadius: 4,
-                          padding: "6px 8px",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        <RefreshCw size={12} />
-                      </motion.button>
-                    </div>
-                    <div style={{ color: "#9ca3af", fontSize: "0.7rem", marginTop: 4 }}>
-                      Balance updated via the balance endpoint
-                    </div>
-                  </td>
+                 
+                  
                 </tr>
               </tbody>
             </table>
