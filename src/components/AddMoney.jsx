@@ -92,7 +92,7 @@ export default function AddMoney({ onSuccess }) {
     }
   }
 
-  // Framer Motion Variants
+
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -121,7 +121,7 @@ export default function AddMoney({ onSuccess }) {
       animate="visible"
       variants={cardVariants}
     >
-      {/* Decorative gradient border */}
+    
       <div
         style={{
           position: "absolute",

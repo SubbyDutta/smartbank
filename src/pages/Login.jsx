@@ -175,7 +175,7 @@ export default function Login() {
     <div className="login-container">
       {/* LEFT SIDE */}
       <div className="login-left">
-        <h1>Welcome to Subby Bank</h1>
+        <h1>Welcome to SmartBank</h1>
         <p>
           Experience smart, secure, and seamless digital banking.  
           Manage your money, loans, and transactions all in one place.
@@ -190,7 +190,7 @@ export default function Login() {
       <div className="login-right">
         <div className="card">
           <h4 className="mb-3 text-center fw-semibold">Sign In</h4>
-          <p className="text-center text-muted mb-3">Access your Subby Bank account</p>
+          <p className="text-center text-muted mb-3">Access your Smart Bank account</p>
 
           {message && (
             <div

@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-// api.js
+
 
 
 const API = axios.create({
- baseURL: "https://subbybankbackend.onrender.com/api",
+ baseURL:  "subbybankbackend.onrender.com/api",
 });
 
 

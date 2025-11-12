@@ -54,7 +54,7 @@ export default function DashboardPanel({ active, setActive, onAddMoneySuccess })
     },
   ]);
 
-  // Framer Motion variants
+  
   const panelVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -91,7 +91,7 @@ export default function DashboardPanel({ active, setActive, onAddMoneySuccess })
    width: 900,
     borderRadius: 24,
     top:-30,
-    right:-30,
+    
     background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
     position: "relative",
     overflow: "hidden",
@@ -106,7 +106,7 @@ export default function DashboardPanel({ active, setActive, onAddMoneySuccess })
       animate="visible"
       variants={panelVariants}
     >
-      {/* Decorative gradient overlay */}
+      
       <div
         style={{
           position: "absolute",
@@ -119,7 +119,7 @@ export default function DashboardPanel({ active, setActive, onAddMoneySuccess })
         }}
       />
 
-      {/* Subtle pattern overlay */}
+     
       <div
         style={{
           position: "absolute",
@@ -204,7 +204,7 @@ export default function DashboardPanel({ active, setActive, onAddMoneySuccess })
           </motion.div>
         )}
 
-        {/* Hero Section with Modern Banking UI */}
+     
         <motion.div
           className="mb-5 pb-4"
           initial={{ opacity: 0, y: 20 }}

@@ -48,10 +48,16 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: #ffffff;
   color: #1f2937;
   font-family: "Inter", system-ui, sans-serif;
   animation: fadeIn var(--motion-duration) ease;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* Header */
@@ -88,9 +94,9 @@
 .admin-body {
   display: flex;
   flex: 1;
-  gap: 18px;
-  padding: 20px;
+  position: relative;
   animation: var(--motion-fadeup);
+  min-height: 100vh;
 }
 
 /* Sidebar */
@@ -200,24 +206,34 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  animation: var(--motion-fadeup);
+  margin-left: 280px;
+  padding: 20px;
+  background: #ffffff;
+  height: 100vh;
+  width: calc(100vw - 280px);
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
 }
 
 .data-card {
-  padding: 14px;
-  border-radius: 10px;
-  background: #ffecec;
-  border: 1px solid rgba(243, 66, 66, 0.1);
+  padding: 16px;
+  border-radius: 4px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* Tables */
 .table-responsive {
   overflow: auto;
   max-height: 520px;
-  border-radius: 12px;
-  background: #fff5f5;
-  padding: 8px;
+  border-radius: 4px;
+  background: #ffffff;
+  padding: 0;
   animation: fadeUp 0.6s var(--motion-ease) both;
 }
 

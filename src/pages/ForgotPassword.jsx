@@ -1,4 +1,4 @@
-// src/pages/ForgotPassword.jsx
+
 import React, { useState, useEffect } from "react";
 import API from "../api";
 import { useNavigate } from "react-router-dom";

@@ -1,16 +1,20 @@
-// src/pages/Signup.jsx
+
 import React, { useState, useEffect } from "react";
 import API from "../api";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Signup = () => {
+  const [creditScore, setCreditScore] = useState("");
+const [noCredit, setNoCredit] = useState(false);
+
   const [form, setForm] = useState({
     username: "",
     password: "",
     confirmPassword: "",
     email: "",
     mobile: "",
+    creditScore: "",
   });
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -190,6 +194,8 @@ const Signup = () => {
         password: form.password,
         email: form.email,
         mobile: form.mobile,
+        creditScore: noCredit ? null : creditScore,
+        
       });
 
       const message = res.data;
@@ -211,9 +217,9 @@ const Signup = () => {
     <div className="signup-container">
       {/* LEFT SIDE */}
       <div className="signup-left">
-        <h1>Join Subby Bank Today</h1>
+        <h1>Join Smart Bank Today</h1>
         <p>
-          Take control of your finances with Subby Bank’s smart banking.  
+          Take control of your finances with Smart Bank’s smart banking.  
           Create your account and start your digital journey today.
         </p>
         <img
@@ -231,7 +237,7 @@ const Signup = () => {
           transition={{ duration: 0.6 }}
         >
           <h3>Create Account</h3>
-          <p>Sign up to access your Subby Bank dashboard</p>
+          <p>Sign up to access your Smart Bank dashboard</p>
 
           {error && <div className="error-text">{error}</div>}
 
@@ -277,6 +283,34 @@ const Signup = () => {
               }
               required
             />
+         
+
+              {/* ⭐ Credit Score Section */}
+              <div className="d-flex flex-column gap-2 mt-2">
+                <input
+                  className="input"
+                  type="number"
+                  placeholder="Credit Score (300 - 900)"
+                  value={creditScore}
+                  disabled={noCredit}
+                  min="300"
+                  max="900"
+                  onChange={(e) => setCreditScore(e.target.value)}
+                />
+
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", color: "#444" }}>
+                  <input
+                    type="checkbox"
+                    checked={noCredit}
+                    onChange={() => {
+                      setNoCredit(!noCredit);
+                      if (!noCredit) setCreditScore(""); // clear when checked
+                    }}
+                  />
+                  I don’t have a credit score yet
+                </label>
+              </div>
+
 
             <motion.button
               type="submit"

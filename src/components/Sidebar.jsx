@@ -12,7 +12,7 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount })
     { key: "myloan", label: "My Loans", icon: "bi-credit-card-2-front-fill" },
   ];
 
-  // Animation variants
+ 
   const sidebarVariants = {
     hidden: { opacity: 0, x: -20 },
     visible: { 
@@ -34,13 +34,14 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount })
     height: "calc(100vh - 40px)",
     padding: "24px",
     width: 260,
+    position: "fixed",
     background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
     boxShadow: "0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02)",
     borderRadius: "0 24px 24px 0",
     position: "sticky",
     top: 20,
     alignSelf: "flex-start",
-    zIndex: 10,
+   
     
     transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
   };
@@ -53,7 +54,7 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount })
       animate="visible"
       variants={sidebarVariants}
     >
-      {/* Decorative gradient border */}
+     
       <div
         style={{
           position: "absolute",

@@ -84,7 +84,7 @@ export default function ChatbotPanel() {
       animate="visible"
       variants={panelVariants}
     >
-      {/* Decorative gradient border */}
+     
       <div
         style={{
           position: "absolute",

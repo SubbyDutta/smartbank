@@ -13,7 +13,7 @@ export default function TransferPanel({ onComplete }) {
   const [msg, setMsg] = useState(null);
   const [showPasswordPopup, setShowPasswordPopup] = useState(false);
 
-  // Step 1: Validate fields and open password popup
+
   const handleInitialSubmit = (e) => {
     e.preventDefault();
     setMsg(null);
@@ -31,7 +31,7 @@ export default function TransferPanel({ onComplete }) {
     setShowPasswordPopup(true);
   };
 
-  // Step 2: Confirm password and process transfer
+ 
   const handleTransfer = async () => {
     setLoading(true);
     setMsg(null);
@@ -87,7 +87,7 @@ export default function TransferPanel({ onComplete }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Decorative gradient border */}
+     
       <div
         style={{
           position: "absolute",
@@ -100,7 +100,7 @@ export default function TransferPanel({ onComplete }) {
         }}
       />
 
-      {/* Background decoration */}
+     
       <div
         style={{
           position: "absolute",

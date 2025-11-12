@@ -8,38 +8,25 @@ export default function Loan() {
   const username = token ? jwtDecode(token).sub : null;
 
   const [income, setIncome] = useState("");
-  const [creditScore, setCreditScore] = useState("");
   const [requestedAmount, setRequestedAmount] = useState("");
-  const [adhar, setAdhar] = useState("");
-  const [pan, setPan] = useState("");
   const [loading, setLoading] = useState(false);
   const [eligibility, setEligibility] = useState(null);
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const [creditScore, setCreditScore] = useState(null);
+  const [interestRate, setInterestRate] = useState(null);
+  const [totalDue, setTotalDue] = useState(null);
+  const [monthlyEMI, setMonthlyEMI] = useState(null);
+
   const handleCheckEligibility = async () => {
-    if (!income || !creditScore || !requestedAmount || !adhar || !pan) {
+    if (!income || !requestedAmount) {
       setError({ type: "error", text: "Please fill all fields." });
       return;
     }
 
     if (Number(requestedAmount) > Number(income) * 2) {
       setError({ type: "error", text: "Requested amount cannot exceed 2× your monthly income." });
-      return;
-    }
-
-    if (Number(creditScore) > 800) {
-      setError({ type: "error", text: "Credit score cannot exceed 800." });
-      return;
-    }
-
-    if (adhar.length < 12) {
-      setError({ type: "error", text: "Aadhar number must be at least 12 characters." });
-      return;
-    }
-
-    if (pan.length !== 10) {
-      setError({ type: "error", text: "PAN number must be exactly 10 characters." });
       return;
     }
 
@@ -50,16 +37,56 @@ export default function Loan() {
 
     setLoading(true);
     setError("");
+    setCreditScore(null);
+    setInterestRate(null);
+    setTotalDue(null);
+    setMonthlyEMI(null);
+
     try {
       const res = await API.post("/loan/check", {
         username,
         income,
-        creditScore,
         requestedAmount,
-        adhar,
-        pan,
       });
       setEligibility(res.data);
+
+    
+      if (res.data.eligible) {
+        const scoreRes = await API.get("/user/creditscore", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const score = scoreRes.data.creditScore;
+        setCreditScore(score);
+
+        
+       let rate;
+
+        if (score >= 850) {
+          rate = 7; // Exceptional credit — best possible rate
+        } else if (score >= 800) {
+          rate = 10; // Excellent credit
+        } else if (score >= 750) {
+          rate = 14; // Very good credit
+        } else if (score >= 700) {
+          rate = 17; // Good but slightly risky
+        } else if (score >= 650) {
+          rate = 20; // Fair credit — higher risk
+        } else if (score >= 600) {
+          rate = 23; // Poor credit — borderline approval
+        } else {
+          rate = 28; // Very poor credit — near rejection zone
+        }
+
+        setInterestRate(rate);
+
+       
+        const principal = Number(requestedAmount);
+        const total = principal + (principal*rate/100);
+        const emi = total / 6;
+
+        setTotalDue(total.toFixed(2));
+        setMonthlyEMI(emi.toFixed(2));
+      }
     } catch (err) {
       setError({ type: "error", text: err.response?.data?.message || "Error checking eligibility" });
     } finally {
@@ -98,15 +125,6 @@ export default function Loan() {
       color: "#10b981",
     },
     {
-      label: "Credit Score",
-      value: creditScore,
-      set: setCreditScore,
-      type: "number",
-      placeholder: "Enter credit score",
-      icon: "bi-graph-up-arrow",
-      color: "#3b82f6",
-    },
-    {
       label: "Requested Loan Amount (₹)",
       value: requestedAmount,
       set: setRequestedAmount,
@@ -115,31 +133,13 @@ export default function Loan() {
       icon: "bi-bank",
       color: "#f59e0b",
     },
-    {
-      label: "Aadhar Number",
-      value: adhar,
-      set: setAdhar,
-      type: "text",
-      placeholder: "Enter Aadhar number",
-      icon: "bi-card-text",
-      color: "#8b5cf6",
-    },
-    {
-      label: "PAN Number",
-      value: pan,
-      set: setPan,
-      type: "text",
-      placeholder: "Enter PAN number",
-      icon: "bi-credit-card-2-front-fill",
-      color: "#ef4444",
-    },
   ];
 
   const panelStyle = {
     width: "100%",
     maxWidth: 800,
     borderRadius: 24,
-     top:-30,
+    top: -30,
     background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
     position: "relative",
     overflow: "hidden",
@@ -155,21 +155,7 @@ export default function Loan() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Decorative gradient border */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-          
-            opacity: 0.8,
-          }}
-        />
-
         <div style={{ position: "relative", zIndex: 2 }}>
-          {/* Header */}
           <div className="mb-4 text-center">
             <div className="d-inline-block mb-3">
               <div
@@ -207,7 +193,6 @@ export default function Loan() {
             </p>
           </div>
 
-          {/* Form */}
           <div className="row g-4">
             {fields.map((field, idx) => (
               <motion.div
@@ -233,13 +218,12 @@ export default function Loan() {
                     fontSize: "1rem",
                     transition: "all 0.2s ease",
                   }}
-                  onFocus={(e) => e.target.style.borderColor = field.color}
-                  onBlur={(e) => e.target.style.borderColor = "rgba(220,53,69,0.2)"}
+                  onFocus={(e) => (e.target.style.borderColor = field.color)}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(220,53,69,0.2)")}
                 />
               </motion.div>
             ))}
 
-            {/* Buttons */}
             <div className="col-12 mt-2">
               <div className="d-flex gap-3">
                 <motion.button
@@ -272,12 +256,13 @@ export default function Loan() {
                   className="btn btn-outline-secondary px-4 py-2"
                   onClick={() => {
                     setIncome("");
-                    setCreditScore("");
                     setRequestedAmount("");
-                    setAdhar("");
-                    setPan("");
                     setEligibility(null);
                     setError("");
+                    setCreditScore(null);
+                    setInterestRate(null);
+                    setTotalDue(null);
+                    setMonthlyEMI(null);
                   }}
                   style={{
                     fontWeight: 600,
@@ -292,27 +277,28 @@ export default function Loan() {
               </div>
             </div>
 
-            {/* Error Message */}
-            {error && typeof error === 'object' && error.text && (
+            {error && typeof error === "object" && error.text && (
               <motion.div
                 className="col-12"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <div className="alert d-flex align-items-center gap-2" style={{
-                  background: "rgba(239,68,68,0.1)",
-                  border: "1px solid rgba(239,68,68,0.3)",
-                  borderRadius: 12,
-                  color: "#ef4444",
-                  fontWeight: 600,
-                }}>
+                <div
+                  className="alert d-flex align-items-center gap-2"
+                  style={{
+                    background: "rgba(239,68,68,0.1)",
+                    border: "1px solid rgba(239,68,68,0.3)",
+                    borderRadius: 12,
+                    color: "#ef4444",
+                    fontWeight: 600,
+                  }}
+                >
                   <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: 20 }}></i>
                   <span>{error.text}</span>
                 </div>
               </motion.div>
             )}
 
-            {/* Eligibility Result */}
             {eligibility && (
               <motion.div
                 className="col-12 mt-3"
@@ -320,33 +306,44 @@ export default function Loan() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <div className="card border-0 p-4" style={{
-                  borderRadius: 16,
-                  background: eligibility.eligible 
-                    ? "linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(16,185,129,0.02) 100%)"
-                    : "linear-gradient(135deg, rgba(239,68,68,0.05) 0%, rgba(239,68,68,0.02) 100%)",
-                  border: eligibility.eligible 
-                    ? "2px solid rgba(16,185,129,0.2)" 
-                    : "2px solid rgba(239,68,68,0.2)",
-                }}>
+                <div
+                  className="card border-0 p-4"
+                  style={{
+                    borderRadius: 16,
+                    background: eligibility.eligible
+                      ? "linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(16,185,129,0.02) 100%)"
+                      : "linear-gradient(135deg, rgba(239,68,68,0.05) 0%, rgba(239,68,68,0.02) 100%)",
+                    border: eligibility.eligible
+                      ? "2px solid rgba(16,185,129,0.2)"
+                      : "2px solid rgba(239,68,68,0.2)",
+                  }}
+                >
                   <div className="d-flex align-items-center mb-3">
-                    <div style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 12,
-                      background: eligibility.eligible 
-                        ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                        : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      fontSize: 24,
-                      boxShadow: eligibility.eligible 
-                        ? "0 6px 16px rgba(16,185,129,0.3)"
-                        : "0 6px 16px rgba(239,68,68,0.3)",
-                    }}>
-                      <i className={`bi ${eligibility.eligible ? "bi-check-circle-fill" : "bi-x-circle-fill"}`}></i>
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        background: eligibility.eligible
+                          ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                          : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        fontSize: 24,
+                        boxShadow: eligibility.eligible
+                          ? "0 6px 16px rgba(16,185,129,0.3)"
+                          : "0 6px 16px rgba(239,68,68,0.3)",
+                      }}
+                    >
+                      <i
+                        className={`bi ${
+                          eligibility.eligible
+                            ? "bi-check-circle-fill"
+                            : "bi-x-circle-fill"
+                        }`}
+                      ></i>
                     </div>
                     <div className="ms-3">
                       <h5 className="fw-bold mb-1">
@@ -359,56 +356,59 @@ export default function Loan() {
                   </div>
 
                   {eligibility.eligible && (
-                    <motion.button
-                      onClick={handleApplyLoan}
-                      className="btn btn-success w-100 mt-3"
-                      disabled={loading}
-                      style={{
-                        fontWeight: 600,
-                        borderRadius: 12,
-                        padding: "14px",
-                        fontSize: "1rem",
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {loading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <i className="bi bi-send-fill me-2"></i>
-                          Apply for Loan
-                        </>
+                    <>
+                      {creditScore && (
+                        <div className="mt-3 text-center">
+                          <h6 className="fw-semibold mb-2">
+                            <i className="bi bi-bar-chart-fill text-info me-2"></i>
+                            Credit Score: <span className="text-dark">{creditScore}</span>
+                          </h6>
+                          <p className="text-muted small mb-1">
+                            Interest Rate: <strong>{interestRate}% p.a.</strong>
+                          </p>
+                          <p className="text-muted small mb-1">
+                            Total Due: <strong>₹{totalDue}</strong>
+                          </p>
+                          <p className="text-muted small">
+                            Monthly EMI (6 months): <strong>₹{monthlyEMI}</strong>
+                          </p>
+                        </div>
                       )}
-                    </motion.button>
+
+                      <motion.button
+                        onClick={handleApplyLoan}
+                        className="btn btn-success w-100 mt-3"
+                        disabled={loading}
+                        style={{
+                          fontWeight: 600,
+                          borderRadius: 12,
+                          padding: "14px",
+                          fontSize: "1rem",
+                        }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-send-fill me-2"></i>
+                            Apply for Loan
+                          </>
+                        )}
+                      </motion.button>
+                    </>
                   )}
                 </div>
               </motion.div>
             )}
           </div>
-
-          {/* Footer */}
-          <motion.div
-            className="mt-4 pt-4 border-top border-light d-flex align-items-center justify-content-center gap-2 text-muted small"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { delay: 0.3 } }}
-          >
-            <i className="bi bi-lightning-charge-fill text-warning"></i>
-            <span>Fast</span>
-            <span className="mx-2">•</span>
-            <i className="bi bi-shield-check-fill text-success"></i>
-            <span>Secure</span>
-            <span className="mx-2">•</span>
-            <i className="bi bi-robot text-info"></i>
-            <span>AI Verified</span>
-          </motion.div>
         </div>
       </motion.div>
 
-      {/* Enhanced Success Popup */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
@@ -447,7 +447,6 @@ export default function Loan() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              {/* Gradient border */}
               <div
                 style={{
                   position: "absolute",
@@ -455,11 +454,9 @@ export default function Loan() {
                   left: 0,
                   right: 0,
                   height: 4,
-                  background: "linear-gradient(90deg, #10b981, #059669)",
+                
                 }}
               />
-
-              {/* Success Icon */}
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
