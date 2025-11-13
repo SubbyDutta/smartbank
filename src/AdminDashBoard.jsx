@@ -348,69 +348,30 @@ export default function AdminDashboard() {
                     <AnimatePresence>
                         {alert && (
                             <motion.div
-                                initial={{ opacity: 0, y: -20 }}
+                                initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
+                                exit={{ opacity: 0, y: -10 }}
                                 className={`alert ${alert.type === "success" ? "alert-success" : "alert-danger"
                                     }`}
                                 style={{
                                     display: "flex",
+                                    top: -20,
                                     alignItems: "center",
                                     gap: 10,
                                     fontWeight: 600,
                                 }}
                             >
                                 {alert.type === "success" ? (
-                                    <CheckCircle size={18} />
+                                    <CheckCircle size={14} />
                                 ) : (
-                                    <AlertTriangle size={18} />
+                                    <AlertTriangle size={14} />
                                 )}
                                 {alert.message}
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    {/* Error State */}
-                    {error && !loading && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="admin-card"
-                            style={{
-                                background: "var(--danger-100)",
-                                borderColor: "var(--danger-200)",
-                                padding: 24,
-                            }}
-                        >
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                                <AlertTriangle
-                                    size={24}
-                                    style={{ color: "var(--danger-600)", flexShrink: 0 }}
-                                />
-                                <div style={{ flex: 1 }}>
-                                    <div
-                                        style={{
-                                            fontWeight: 700,
-                                            color: "var(--danger-900)",
-                                            marginBottom: 4,
-                                        }}
-                                    >
-                                        {error.context} Error
-                                    </div>
-                                    <div style={{ color: "var(--danger-700)", fontSize: "0.9375rem" }}>
-                                        {error.message}
-                                    </div>
-                                    <button
-                                        className="btn-ghost"
-                                        onClick={() => setError(null)}
-                                        style={{ marginTop: 12, padding: "6px 12px", fontSize: "0.875rem" }}
-                                    >
-                                        Dismiss
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
+                  
 
                     {/* Views */}
                     {!loading && view === "home" && <StatTiles stats={stats} setView={setView} />}
@@ -478,7 +439,7 @@ export default function AdminDashboard() {
                         />
                     )}
 
-                    {/* ✅ NEW VIEW */}
+                  
                     {!loading && view === "bankfund" && (
                         <BankFundView showAlert={showAlert} showPopup={showPopup} />
                     )}
