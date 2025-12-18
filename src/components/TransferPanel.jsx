@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import API from "../api";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { v4 as uuidv4 } from "uuid";
 export default function TransferPanel({ onComplete }) {
   const [form, setForm] = useState({
     senderAccount: "",
@@ -37,14 +37,17 @@ export default function TransferPanel({ onComplete }) {
     setMsg(null);
 
     try {
-      const res = await API.post("/transfer/transfer", {
+        const idempotencyKey = uuidv4();
+        const res = await API.post("/transfer/transfer", {
+        key: crypto.randomUUID(),
         senderAccount: form.senderAccount,
         receiverAccount: form.receiverAccount,
         amount: Number(form.amount),
         password: password,
+       
       });
 
-      // ✅ Success
+      
       setMsg({ type: "success", text: "Transfer completed successfully!" });
       setForm({ senderAccount: "", receiverAccount: "", amount: "" });
       setPassword("");
@@ -53,16 +56,18 @@ export default function TransferPanel({ onComplete }) {
     } catch (err) {
       console.error(err);
 
-      const errorMsg = err?.response?.data || err?.data || "Transfer failed";
+      const errorMsg = (
+  err.response?.data?.message ||
+  err.response?.data?.error ||
+  "Something went wrong"
+);
 
-      if (errorMsg.toLowerCase().includes("password")) {
-        // ❌ Wrong password → keep popup open
-        setMsg({ type: "error", text: "Incorrect password. Please try again." });
-      } else {
-        // ❌ Other errors → close popup and show error in main form
+
+     
+      
         setMsg({ type: "error", text: errorMsg });
         setShowPasswordPopup(false);
-      }
+    
     } finally {
       setLoading(false);
     }
@@ -126,9 +131,9 @@ export default function TransferPanel({ onComplete }) {
         }}
       />
 
-      {/* Content */}
+      
       <div style={{ position: "relative", zIndex: 2 }}>
-        {/* Header */}
+        
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <div className="d-flex align-items-center gap-2 mb-2">
@@ -179,7 +184,7 @@ export default function TransferPanel({ onComplete }) {
           </motion.button>
         </div>
 
-        {/* Main Transfer Form */}
+       
         <form onSubmit={handleInitialSubmit}>
           <div className="row g-4">
             {[
@@ -251,7 +256,7 @@ export default function TransferPanel({ onComplete }) {
               </motion.div>
             ))}
 
-            {/* Buttons */}
+           
             <div className="col-12 mt-2">
               <div className="d-flex gap-3">
                 <motion.button
@@ -263,7 +268,7 @@ export default function TransferPanel({ onComplete }) {
                     fontSize: "1rem",
                     flex: 1,
                   }}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <i className="bi bi-send-fill me-2"></i>
@@ -280,16 +285,16 @@ export default function TransferPanel({ onComplete }) {
                     fontWeight: 600,
                     borderRadius: 12,
                   }}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <i className="bi bi-x-circle me-2"></i>
-                  Clear
+                    Cancel
                 </motion.button>
               </div>
             </div>
 
-            {/* Message */}
+            
             <AnimatePresence>
               {msg && (
                 <motion.div
@@ -328,7 +333,7 @@ export default function TransferPanel({ onComplete }) {
           </div>
         </form>
 
-        {/* Security Footer */}
+       
         <motion.div 
           className="mt-4 pt-4 border-top border-light d-flex align-items-center gap-3"
           initial={{ opacity: 0 }}
@@ -344,7 +349,7 @@ export default function TransferPanel({ onComplete }) {
         </motion.div>
       </div>
 
-      {/* Enhanced Password Popup */}
+     
       <AnimatePresence>
         {showPasswordPopup && (
           <motion.div
@@ -373,7 +378,7 @@ export default function TransferPanel({ onComplete }) {
               exit={{ scale: 0.8, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Gradient border */}
+              
               <div
                 style={{
                   position: "absolute",
@@ -385,7 +390,7 @@ export default function TransferPanel({ onComplete }) {
                 }}
               />
 
-              {/* Icon */}
+              
               <div className="text-center mb-4">
                 <div
                   style={{
@@ -408,7 +413,7 @@ export default function TransferPanel({ onComplete }) {
                 <p className="text-muted small mb-0">Enter your password to authorize this transaction</p>
               </div>
 
-              {/* Password Input */}
+              
               <div className="position-relative">
                 <input
                   type="password"
@@ -462,6 +467,7 @@ export default function TransferPanel({ onComplete }) {
                     fontWeight: 600,
                     borderRadius: 12,
                     padding: "12px",
+                      marginLeft:"25px"
                   }}
                   whileHover={!loading ? { scale: 1.02 } : {}}
                   whileTap={!loading ? { scale: 0.98 } : {}}
@@ -490,8 +496,9 @@ export default function TransferPanel({ onComplete }) {
                     fontWeight: 600,
                     borderRadius: 12,
                     padding: "12px",
+                   
                   }}
-                  whileHover={!loading ? { scale: 1.02 } : {}}
+                  whileHover={!loading ? { scale: 1.01 } : {}}
                   whileTap={!loading ? { scale: 0.98 } : {}}
                 >
                   Cancel

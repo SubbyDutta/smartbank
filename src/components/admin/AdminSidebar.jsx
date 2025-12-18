@@ -29,10 +29,10 @@ export default function AdminSidebar({
 }) {
     const handleKeyPress = (e) => e.key === "Enter" && onSearchUser();
 
-    const ACCENT_COLOR = "#e63946"; // brighter red for energy
-    const sidebarBg = "#ffffff"; // clean white
-    const itemBg = "#f8f9fa"; // light gray
-    const inactiveTextColor = "#1f2937"; // dark gray text
+    const ACCENT_COLOR = "#e63946"; 
+    const sidebarBg = "#ffffff"; 
+    const itemBg = "#f8f9fa";
+    const inactiveTextColor = "#1f2937"; 
 
     const navItems = [
         { key: "home", label: "Dashboard", icon: Home, onClick: () => setActive("home") },
@@ -105,12 +105,12 @@ export default function AdminSidebar({
         color: "#fff",
         boxShadow: `0 6px 12px ${ACCENT_COLOR}70`,
         transition: {
-          duration: 0.45, // smoother and slower hover
+          duration: 0.45, 
           ease: "easeInOut",
         },
       }
 }transition={{
-  type: "tween", // smoother than spring
+  type: "tween",
   duration: 0.45,
   ease: "easeInOut",
 }}
@@ -148,7 +148,7 @@ whileTap={{ scale: 0.97 }}
             variants={sidebarVariants}
         >
             <div>
-                {/* Admin Info */}
+                
                 <motion.div
                     style={{
                         display: "flex",
@@ -202,7 +202,7 @@ whileTap={{ scale: 0.97 }}
                     </div>
                 </motion.div>
 
-                {/* Nav */}
+               
                 <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {navItems.map((item) => (
                         <NavItem key={item.key} item={item} />
@@ -212,7 +212,7 @@ whileTap={{ scale: 0.97 }}
              
             </div>
 
-            {/* Logout */}
+           
             <motion.div style={{ marginTop: "auto", paddingTop: 24 }}>
                 <motion.button
                     onClick={onLogout}

@@ -18,11 +18,13 @@ export default function ChatbotPanel() {
 
   const send = async (e) => {
     e?.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
+
     const userMsg = { role: "user", text: input, time: new Date().toISOString() };
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setLoading(true);
+
     try {
       const res = await API.post("/chatbot", { query: userMsg.text });
       const botText = res.data || "No response";
@@ -31,9 +33,14 @@ export default function ChatbotPanel() {
         { role: "bot", text: String(botText), time: new Date().toISOString() },
       ]);
     } catch (err) {
+      console.error("Chatbot error:", err);
       setMessages((m) => [
         ...m,
-        { role: "bot", text: "Chatbot unavailable", time: new Date().toISOString() },
+        {
+          role: "bot",
+          text: "Chatbot unavailable. Please try again later.",
+          time: new Date().toISOString(),
+        },
       ]);
     } finally {
       setLoading(false);
@@ -42,63 +49,43 @@ export default function ChatbotPanel() {
 
   const sampleQueries = [
     "Show my recent transactions",
-    "How to transfer to another bank",
     "What is my balance?",
     "How do I add money?",
+    "Tell me about my loan repayments",
   ];
-
-  // Framer Motion variants
-  const panelVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-    position: "fixed"
-  };
 
   const messageVariants = {
     hidden: { opacity: 0, y: 10, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.3 } },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.25 } },
   };
 
   const buttonVariants = {
-    hover: { scale: 1.05, transition: { duration: 0.2 } },
+    hover: { scale: 1.05, transition: { duration: 0.15 } },
     tap: { scale: 0.95 },
   };
 
   const panelStyle = {
     width: "100%",
-    maxWidth: 800,
+    maxWidth: 1000,
     borderRadius: 24,
     background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
-    position: "fixed",
-    bottom:20,
-    left:330,
+    margin: "0 auto",
     overflow: "hidden",
     boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+    height:700,
+    top:-30
   };
 
   return (
     <motion.div
       className="card border-0 shadow-lg p-4 p-md-5"
       style={panelStyle}
-      initial="hidden"
-      animate="visible"
-      variants={panelVariants}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
-     
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 4,
-         
-          opacity: 0.8,
-        }}
-      />
-
       <div style={{ position: "relative", zIndex: 2 }}>
-        {/* Header */}
+        
         <div className="mb-4 pb-3 border-bottom border-light">
           <div className="d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-3">
@@ -132,27 +119,34 @@ export default function ChatbotPanel() {
                 </h4>
                 <p className="text-muted small mb-0">
                   <i className="bi bi-sparkles me-1 text-warning"></i>
-                  Ask about transfers, balance or account help
+                  Ask about transfers, balance, loans, or account help.
                 </p>
               </div>
             </div>
-            <div style={{
-              background: "rgba(16,185,129,0.1)",
-              padding: "8px 16px",
-              borderRadius: 20,
-              border: "1px solid rgba(16,185,129,0.2)",
-            }}>
-              <span style={{ fontSize: "0.85rem", color: "#10b981", fontWeight: 600 }}>
-                <i className="bi bi-circle-fill me-1" style={{ fontSize: 8 }}></i>
+            <div
+              style={{
+                background: "rgba(16,185,129,0.1)",
+                padding: "8px 16px",
+                borderRadius: 20,
+                border: "1px solid rgba(16,185,129,0.2)",
+              }}
+            >
+              <span
+                style={{ fontSize: "0.85rem", color: "#10b981", fontWeight: 600 }}
+              >
+                <i
+                  className="bi bi-circle-fill me-1"
+                  style={{ fontSize: 8 }}
+                ></i>
                 Online
               </span>
             </div>
           </div>
         </div>
 
-        {/* Chat Interface */}
+        
         <div className="row g-4">
-          {/* Chat Window */}
+         
           <div className="col-lg-8">
             <div
               className="card border-0"
@@ -166,7 +160,7 @@ export default function ChatbotPanel() {
                 flexDirection: "column",
               }}
             >
-              {/* Messages Area */}
+             
               <div
                 style={{
                   flex: 1,
@@ -174,27 +168,28 @@ export default function ChatbotPanel() {
                   padding: "20px",
                   background: "#f8f9fa",
                 }}
-                className="services-container"
               >
                 {messages.length === 0 ? (
                   <div className="text-center py-5">
-                    <div style={{
-                      width: 80,
-                      height: 80,
-                      margin: "0 auto 1.5rem",
-                      borderRadius: "50%",
-                      background: "rgba(230,57,70,0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 36,
-                      color: "#e63946",
-                    }}>
+                    <div
+                      style={{
+                        width: 80,
+                        height: 80,
+                        margin: "0 auto 1.5rem",
+                        borderRadius: "50%",
+                        background: "rgba(230,57,70,0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 36,
+                        color: "#e63946",
+                      }}
+                    >
                       <i className="bi bi-chat-dots"></i>
                     </div>
                     <h5 className="text-muted fw-bold mb-2">Start a Conversation</h5>
                     <p className="text-muted small mb-0">
-                      Ask me anything about your account or transactions
+                      Ask me anything about your account, balance or recent activity.
                     </p>
                   </div>
                 ) : (
@@ -209,7 +204,8 @@ export default function ChatbotPanel() {
                         className="mb-3"
                         style={{
                           display: "flex",
-                          justifyContent: m.role === "user" ? "flex-end" : "flex-start",
+                          justifyContent:
+                            m.role === "user" ? "flex-end" : "flex-start",
                         }}
                       >
                         <div
@@ -217,15 +213,18 @@ export default function ChatbotPanel() {
                             maxWidth: "70%",
                             padding: "12px 16px",
                             borderRadius: 16,
-                            background: m.role === "user" 
-                              ? "linear-gradient(135deg, #ff6b81 0%, #e63946 100%)"
-                              : "#ffffff",
+                            background:
+                              m.role === "user"
+                                ? "linear-gradient(135deg, #ff6b81 0%, #e63946 100%)"
+                                : "#ffffff",
                             color: m.role === "user" ? "#fff" : "#212529",
-                            boxShadow: m.role === "user" 
-                              ? "0 4px 12px rgba(230,57,70,0.25)"
-                              : "0 2px 8px rgba(0,0,0,0.1)",
+                            boxShadow:
+                              m.role === "user"
+                                ? "0 4px 12px rgba(230,57,70,0.25)"
+                                : "0 2px 8px rgba(0,0,0,0.1)",
                             fontSize: "0.95rem",
                             lineHeight: 1.5,
+                            whiteSpace: "pre-wrap",
                           }}
                         >
                           {m.text}
@@ -234,7 +233,7 @@ export default function ChatbotPanel() {
                     ))}
                   </AnimatePresence>
                 )}
-                
+
                 {loading && (
                   <motion.div
                     className="d-flex align-items-center gap-2 mb-3"
@@ -251,16 +250,18 @@ export default function ChatbotPanel() {
                     <span className="text-muted small">AI is thinking...</span>
                   </motion.div>
                 )}
-                
+
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input Area */}
-              <div style={{
-                padding: "16px",
-                background: "#ffffff",
-                borderTop: "1px solid rgba(0,0,0,0.05)",
-              }}>
+              
+              <div
+                style={{
+                  padding: "16px",
+                  background: "#ffffff",
+                  borderTop: "1px solid rgba(0,0,0,0.05)",
+                }}
+              >
                 <form onSubmit={send} className="d-flex gap-2">
                   <input
                     className="form-control"
@@ -273,7 +274,12 @@ export default function ChatbotPanel() {
                       padding: "12px 16px",
                       fontSize: "0.95rem",
                     }}
-                    onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && send(e)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        send(e);
+                      }
+                    }}
                   />
                   <motion.button
                     className="btn btn-danger"
@@ -286,7 +292,7 @@ export default function ChatbotPanel() {
                       fontWeight: 600,
                     }}
                     variants={buttonVariants}
-                    whileHover="hover"
+                    
                     whileTap="tap"
                   >
                     {loading ? (
@@ -303,26 +309,30 @@ export default function ChatbotPanel() {
             </div>
           </div>
 
-          {/* Tips Sidebar */}
+         
           <div className="col-lg-4">
             <div
               className="card border-0"
               style={{
                 height: 500,
-                background: "linear-gradient(135deg, rgba(255,107,129,0.05) 0%, rgba(230,57,70,0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(255,107,129,0.05) 0%, rgba(230,57,70,0.05) 100%)",
                 borderRadius: 16,
                 border: "1px solid rgba(220,53,69,0.1)",
                 padding: "20px",
               }}
             >
               <div className="mb-3">
-                <i className="bi bi-lightbulb-fill text-warning me-2" style={{ fontSize: 20 }}></i>
-                <span className="fw-bold" style={{ fontSize: "1.1rem" }}>Quick Tips</span>
+                <i
+                  className="bi bi-lightbulb-fill text-warning me-2"
+                  style={{ fontSize: 20 }}
+                ></i>
+                <span className="fw-bold" style={{ fontSize: "1.1rem" }}>
+                  Quick Tips
+                </span>
               </div>
-              
-              <p className="text-muted small mb-3">
-                Try asking about:
-              </p>
+
+              <p className="text-muted small mb-3">Try asking about:</p>
 
               <div className="d-flex flex-column gap-3">
                 {sampleQueries.map((query, idx) => (
@@ -338,7 +348,10 @@ export default function ChatbotPanel() {
                       textAlign: "left",
                     }}
                     onClick={() => setInput(query)}
-                    whileHover={{ scale: 1.02, backgroundColor: "rgba(230,57,70,0.05)" }}
+                    whileHover={{
+                      scale: 1.02,
+                      backgroundColor: "rgba(230,57,70,0.05)",
+                    }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <i className="bi bi-arrow-right-circle-fill me-2"></i>

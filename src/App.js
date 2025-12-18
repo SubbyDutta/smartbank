@@ -1,5 +1,6 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -12,13 +13,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Signup />} />
+        
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protected routes */}
+        
         <Route
           path="/admin"
           element={
@@ -36,7 +38,7 @@ export default function App() {
           }
         />
 
-        {/* Fallback to login for unknown routes */}
+       
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

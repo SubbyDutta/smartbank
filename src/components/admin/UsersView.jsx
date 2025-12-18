@@ -1,869 +1,306 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Search, XCircle, DollarSign, RefreshCw, Trash2, UserCog, CheckCircle, User } from "lucide-react";
 import API from "../../api";
 
-export default function UsersView({
-  users, filtered, paged,
-  query, setQuery, page, setPage, pageSize,
-  editForm, setEditForm,
-  searchId, setSearchId, onSearchUser,
-  showAlert
-}) {
-  const ACCENT_COLOR = "#e63946";
-  const BG_COLOR = "#f8f9fa";
-  const CARD_BG = "#ffffff";
-  const TEXT_COLOR = "#1f2937";
-  const BORDER_COLOR = "#e5e7eb";
+export default function UsersView({ users, load, page, setPage, totalPages }) {
+  const [query, setQuery] = useState("");
+  const [filtered, setFiltered] = useState([]);
+  const [edit, setEdit] = useState(null);
+  const [searchId, setSearchId] = useState("");
 
-  const scalarize = (v) => {
-    if (v == null) return "";
-    if (Array.isArray(v)) return v.join("-");
-    if (typeof v === "object") { try { return JSON.stringify(v); } catch { return String(v); } }
-    return String(v);
-  };
+  useEffect(() => {
+    load(page);
+   
+  }, [page]);
 
-  const resolveId = (obj) => String(obj?.id ?? obj?.userId ?? obj?.user_id ?? obj ?? "");
+  useEffect(() => {
+    if (!query) {
+      setFiltered(users || []);
+    } else {
+      const q = query.toLowerCase();
+      setFiltered(
+        (users || []).filter((u) =>
+          JSON.stringify(u).toLowerCase().includes(q)
+        )
+      );
+    }
+  }, [query, users]);
 
-  const saveUserDetails = async () => {
-    if (!editForm || !editForm.id) return;
+  const searchUser = async () => {
+    if (!searchId) return;
     try {
-      const payload = {
-        username: editForm.username,
-        email: editForm.email,
-        mobile: editForm.mobile,
-        role: editForm.role,
-      };
-      await API.put(`/admin/user/${resolveId(editForm.id)}`, payload);
-      showAlert("success", "User details updated");
-      await onSearchUser(editForm.id);
+      const r = await API.get(`/admin/user/${searchId}`);
+      setEdit(r.data);
     } catch (e) {
-      console.error(e);
-      showAlert("danger", "Failed to update user");
+      console.error("User search failed", e);
+      alert("User not found");
     }
   };
 
-  const saveBalance = async () => {
-    if (!editForm || !editForm.id) return;
-    const parsed = parseFloat(String(editForm.balance));
-    if (Number.isNaN(parsed)) return showAlert("danger", "Enter a valid balance");
+  const save = async () => {
+    if (!edit || !edit.id) return;
     try {
-      await API.patch("/admin/balance/", { userId: resolveId(editForm.id), amount: parsed });
-      showAlert("success", "Balance updated");
-      await onSearchUser(editForm.id);
+      await API.put(`/admin/user/${edit.id}`, edit);
+      await load(page);
+      setEdit(null);
     } catch (e) {
-      console.error(e);
-      showAlert("danger", "Failed to update balance");
+      console.error("Save failed", e);
+      alert("Failed to update user");
     }
   };
 
-  const deleteUser = async (id) => {
-    const resolved = resolveId(id);
-    if (!resolved) return;
-    if (!window.confirm(`Delete user with ID ${resolved}? This is irreversible.`)) return;
+  const del = async (id) => {
+    if (!window.confirm("Delete this user (and their bank account)?")) return;
     try {
-      await API.delete(`admin/user/${resolved}`);
-      showAlert("success", "User deleted");
-      setEditForm(null);
-      setSearchId("");
+      await API.delete(`/admin/user/${id}`);
+      await load(page);
+      if (edit && edit.id === id) setEdit(null);
     } catch (e) {
-      console.error(e);
-      showAlert("danger", "Failed to delete user");
+      console.error("Delete failed", e);
+      alert("Failed to delete user");
     }
   };
 
-  const renderHeader = (obj, extra) => {
-    if (!obj) return null;
-    return (
-      <tr>
-        {Object.keys(obj)
-          .filter((k) => k !== "password")
-          .map((k) => (
-            <th
-              key={k}
-              style={{
-                color: TEXT_COLOR,
-                fontWeight: 600,
-                fontSize: "0.75rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.3px",
-                padding: "8px",
-                borderBottom: `1px solid ${BORDER_COLOR}`,
-                background: "#f9fafb",
-              }}
-            >
-              {k.replace(/_/g, " ")}
-            </th>
-          ))}
-        {extra && (
-          <th
-            style={{
-              color: TEXT_COLOR,
-              fontWeight: 600,
-              fontSize: "0.75rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.3px",
-              padding: "8px",
-              borderBottom: `1px solid ${BORDER_COLOR}`,
-              background: "#f9fafb",
-              textAlign: "center",
-            }}
-          >
-            Actions
-          </th>
-        )}
-      </tr>
+ 
+  const getEditableFields = (obj) => {
+    if (!obj) return [];
+    const excluded = ["password", "createdAt", "updatedAt"];
+    return Object.keys(obj).filter(
+      (key) =>
+        !excluded.includes(key) &&
+        obj[key] !== null &&
+        typeof obj[key] !== "object"
     );
   };
 
-  const renderUserRow = (u, i) => {
-    return (
-      <motion.tr
-        key={i}
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: i * 0.02, duration: 0.25 }}
-        whileHover={{ backgroundColor: "#f9fafb" }}
-        style={{
-          color: TEXT_COLOR,
-          borderBottom: `1px solid ${BORDER_COLOR}`,
-          transition: "all 0.2s ease",
-        }}
-      >
-        {Object.entries(u)
-          .filter(([k]) => k !== "password")
-          .map(([k, v]) => {
-            if (k === "balance") {
-              return (
-                <td key={k} style={{ padding: "8px" }}>
-                  <strong style={{ color: "#10b981", fontSize: "0.8rem", fontWeight: 700 }}>
-                    ₹ {Number(v ?? 0).toLocaleString("en-IN")}
-                  </strong>
-                </td>
-              );
-            }
-            return (
-              <td key={k} style={{ padding: "8px", fontSize: "0.8rem" }}>
-                {k === "password" ? "••••••••" : scalarize(v)}
-              </td>
-            );
-          })}
-        <td style={{ padding: "8px", textAlign: "center" }}>
-          <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-            <motion.button
-              onClick={() => setEditForm(u)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: `linear-gradient(135deg, ${ACCENT_COLOR}, #b91c28)`,
-                color: "#fff",
-                border: "none",
-                borderRadius: 4,
-                padding: "6px 10px",
-                fontWeight: 700,
-                cursor: "pointer",
-                fontSize: "0.7rem",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <UserCog size={12} /> Edit
-            </motion.button>
-            <motion.button
-              onClick={() => deleteUser(u)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: "transparent",
-                border: `1px solid ${BORDER_COLOR}`,
-                color: "#6b7280",
-                borderRadius: 4,
-                padding: "6px 10px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontSize: "0.7rem",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                transition: "all 0.2s",
-              }}
-            >
-              <Trash2 size={12} />
-            </motion.button>
-          </div>
-        </td>
-      </motion.tr>
-    );
+ 
+  const getTableKeys = () => {
+    if (!users || !users[0]) return [];
+    return Object.keys(users[0]).filter((k) => k !== "password");
   };
+
+  const tableKeys = getTableKeys();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      style={{
-         width: '100%',
-        minWidth: 1200,
-        maxWidth: '100%',
-        top: -40,
-        background: CARD_BG,
-        borderRadius: 4,
-        color: TEXT_COLOR,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        border: `1px solid ${BORDER_COLOR}`,
-        height: "calc(100vh - 40px)",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
+      className="container-fluid"
+      style={{ margin: "0 auto" }}  
     >
-      {/* Header Section */}
-      <div
-        style={{
-          padding: 20,
-          borderBottom: `1px solid ${BORDER_COLOR}`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <motion.div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 4,
-              background: `linear-gradient(135deg, ${ACCENT_COLOR}, #b91c28)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <Users size={24} color="#fff" strokeWidth={2} />
-          </motion.div>
-          <div>
-            <h4
-              style={{
-                margin: 0,
-                fontSize: "1.25rem",
-                fontWeight: 700,
-                color: TEXT_COLOR,
-              }}
-            >
-              All Users
-            </h4>
-            <div
-              style={{
-                fontSize: "0.8rem",
-                color: "#6b7280",
-                marginTop: 2,
-                fontWeight: 500,
-              }}
-            >
-              {filtered.length} total users
-            </div>
+      
+      <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h4 className="fw-bold mb-1">User Management</h4>
+          <div className="text-muted small">
+            Search, edit and remove registered users.
           </div>
         </div>
 
-        {/* Controls */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ position: "relative" }}>
-            <Search
-              size={14}
-              style={{
-                position: "absolute",
-                left: 10,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "#9ca3af",
-              }}
-            />
-            <input
-              placeholder="Search users..."
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPage(1);
-              }}
-              style={{
-                padding: "8px 10px 8px 32px",
-                borderRadius: 4,
-                border: `1px solid ${BORDER_COLOR}`,
-                background: CARD_BG,
-                color: TEXT_COLOR,
-                fontSize: "0.8rem",
-                outline: "none",
-                width: 200,
-                transition: "all 0.2s",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = ACCENT_COLOR;
-                e.target.style.boxShadow = `0 0 0 2px ${ACCENT_COLOR}20`;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = BORDER_COLOR;
-                e.target.style.boxShadow = "none";
-              }}
-            />
-          </div>
-          <motion.button
-            onClick={() => {
-              setQuery("");
-              setPage(1);
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+        <div className="d-flex gap-2 flex-wrap">
+          <input
+            className="form-control form-control-sm"
             style={{
-              background: "transparent",
-              color: "#6b7280",
-              border: `1px solid ${BORDER_COLOR}`,
-              borderRadius: 4,
-              padding: "8px 12px",
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: "0.8rem",
-              transition: "all 0.2s",
+              maxWidth: 220,
+              borderRadius: 999,
+              borderColor: "#e5e7eb",
             }}
-          >
-            <XCircle size={14} />
-          </motion.button>
+            placeholder="Search by any field..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <div className="input-group input-group-sm" style={{ maxWidth: 220 }}>
+            <input
+              type="text"
+              className="form-control"
+              style={{
+                borderRadius: "999px 0 0 999px",
+                borderColor: "#e5e7eb",
+              }}
+              placeholder="Search by ID"
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && searchUser()}
+            />
+            <button
+              className="btn btn-outline-secondary"
+              style={{ borderRadius: "0 999px 999px 0" }}
+              onClick={searchUser}
+            >
+              Go
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Edit Form */}
-      {editForm && (
+      
+      {edit && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          className="card shadow-sm border-0 mb-4"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           style={{
-            background: BG_COLOR,
-            padding: 16,
-            borderRadius: 4,
-            marginBottom: 20,
-            border: `1px solid ${BORDER_COLOR}`,
+            borderRadius: 18,
+            overflow: "hidden",
+            backgroundColor: "#ffffff",
           }}
         >
           <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
+            className="px-4 py-3 border-bottom"
+            style={{ backgroundColor: "#f9fafb", borderColor: "#f3f4f6" }}
           >
-            <h6
-              style={{
-                margin: 0,
-                fontSize: "1rem",
-                fontWeight: 700,
-                color: TEXT_COLOR,
-              }}
-            >
-              Edit User
-            </h6>
-            <div style={{ color: "#6b7280", fontSize: "0.8rem", fontWeight: 600 }}>
-              User ID: {resolveId(editForm)}
-            </div>
-          </div>
-
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontWeight: 600,
-                      fontSize: "0.75rem",
-                      textAlign: "left",
-                      padding: "8px",
-                      width: 180,
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    Field
-                  </th>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontWeight: 600,
-                      fontSize: "0.75rem",
-                      textAlign: "left",
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    Value (editable)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.75rem",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    ID
-                  </th>
-                  <td
-                    style={{
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                      color: TEXT_COLOR,
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    {resolveId(editForm)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.75rem",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    Username
-                  </th>
-                  <td
-                    style={{
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    <input
-                      name="username"
-                      value={editForm.username ?? ""}
-                      onChange={(e) => setEditForm((p) => ({ ...p, username: e.target.value }))}
-                      style={{
-                        width: "100%",
-                        padding: "6px 8px",
-                        borderRadius: 4,
-                        border: `1px solid ${BORDER_COLOR}`,
-                        background: CARD_BG,
-                        color: TEXT_COLOR,
-                        fontSize: "0.8rem",
-                        outline: "none",
-                      }}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.75rem",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    Email
-                  </th>
-                  <td
-                    style={{
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    <input
-                      name="email"
-                      type="email"
-                      value={editForm.email ?? ""}
-                      onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
-                      style={{
-                        width: "100%",
-                        padding: "6px 8px",
-                        borderRadius: 4,
-                        border: `1px solid ${BORDER_COLOR}`,
-                        background: CARD_BG,
-                        color: TEXT_COLOR,
-                        fontSize: "0.8rem",
-                        outline: "none",
-                      }}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.75rem",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    Mobile
-                  </th>
-                  <td
-                    style={{
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    <input
-                      name="mobile"
-                      value={editForm.mobile ?? ""}
-                      onChange={(e) => setEditForm((p) => ({ ...p, mobile: e.target.value }))}
-                      style={{
-                        width: "100%",
-                        padding: "6px 8px",
-                        borderRadius: 4,
-                        border: `1px solid ${BORDER_COLOR}`,
-                        background: CARD_BG,
-                        color: TEXT_COLOR,
-                        fontSize: "0.8rem",
-                        outline: "none",
-                      }}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.75rem",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    Role
-                  </th>
-                  <td
-                    style={{
-                      padding: "8px",
-                      borderBottom: `1px solid ${BORDER_COLOR}`,
-                    }}
-                  >
-                    <input
-                      name="role"
-                      value={editForm.role ?? ""}
-                      onChange={(e) => setEditForm((p) => ({ ...p, role: e.target.value }))}
-                      style={{
-                        width: "100%",
-                        padding: "6px 8px",
-                        borderRadius: 4,
-                        border: `1px solid ${BORDER_COLOR}`,
-                        background: CARD_BG,
-                        color: TEXT_COLOR,
-                        fontSize: "0.8rem",
-                        outline: "none",
-                      }}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      color: "#6b7280",
-                      fontSize: "0.75rem",
-                      fontWeight: 500,
-                      textAlign: "left",
-                      padding: "8px",
-                    }}
-                  >
-                    Balance (INR)
-                  </th>
-                  <td style={{ padding: "8px" }}>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input
-                        name="balance"
-                        value={editForm.balance ?? ""}
-                        onChange={(e) => setEditForm((p) => ({ ...p, balance: e.target.value }))}
-                        type="number"
-                        step="0.01"
-                        style={{
-                          flex: 1,
-                          padding: "6px 8px",
-                          borderRadius: 4,
-                          border: `1px solid ${BORDER_COLOR}`,
-                          background: CARD_BG,
-                          color: TEXT_COLOR,
-                          fontSize: "0.8rem",
-                          outline: "none",
-                        }}
-                      />
-                      <motion.button
-                        onClick={saveBalance}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                          background: "linear-gradient(135deg, #10b981, #059669)",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 4,
-                          padding: "6px 10px",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          fontSize: "0.7rem",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        <DollarSign size={12} /> Save
-                      </motion.button>
-                      <motion.button
-                        onClick={() => onSearchUser(editForm.id)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                          background: "transparent",
-                          border: `1px solid ${BORDER_COLOR}`,
-                          color: "#6b7280",
-                          borderRadius: 4,
-                          padding: "6px 8px",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        <RefreshCw size={12} />
-                      </motion.button>
-                    </div>
-                    <div style={{ color: "#9ca3af", fontSize: "0.7rem", marginTop: 4 }}>
-                      Balance updated via the balance endpoint
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
-            <motion.button
-              onClick={saveUserDetails}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: `linear-gradient(135deg, ${ACCENT_COLOR}, #b91c28)`,
-                color: "#fff",
-                border: "none",
-                borderRadius: 4,
-                padding: "8px 14px",
-                fontWeight: 700,
-                cursor: "pointer",
-                fontSize: "0.8rem",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <CheckCircle size={14} /> Save Details
-            </motion.button>
-            <motion.button
-              onClick={() => setEditForm(null)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: "transparent",
-                border: `1px solid ${BORDER_COLOR}`,
-                color: "#6b7280",
-                borderRadius: 4,
-                padding: "8px 14px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontSize: "0.8rem",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <XCircle size={14} /> Cancel
-            </motion.button>
-            <motion.button
-              onClick={() => deleteUser(editForm)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                background: "transparent",
-                border: `1px solid ${BORDER_COLOR}`,
-                color: "#6b7280",
-                borderRadius: 4,
-                padding: "8px 14px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontSize: "0.8rem",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <Trash2 size={14} /> Delete User
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Table Section */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
-      {users.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          style={{
-            textAlign: "center",
-            padding: 40,
-            background: BG_COLOR,
-            borderRadius: 4,
-            border: `1px solid ${BORDER_COLOR}`,
-          }}
-        >
-          <Users size={48} style={{ color: "#9ca3af", marginBottom: 12 }} />
-          <div style={{ color: "#6b7280", fontWeight: 600, fontSize: "1rem" }}>
-            No users found
-          </div>
-        </motion.div>
-      ) : (
-        <>
-          <div
-            style={{
-              overflowX: "auto",
-              borderRadius: 4,
-              border: `1px solid ${BORDER_COLOR}`,
-            }}
-          >
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                background: CARD_BG,
-                fontSize: "0.8rem",
-              }}
-            >
-              <thead>
-                {renderHeader(users[0], true)}
-              </thead>
-              <tbody>{paged.map((u, i) => renderUserRow(u, i))}</tbody>
-            </table>
-          </div>
-        </>
-      )}
-      </div>
-
-      {/* Fixed Footer */}
-      {users.length > 0 && (
-          <div
-            style={{
-              padding: 20,
-              borderTop: `1px solid ${BORDER_COLOR}`,
-              background: "#fff",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              color: "#6b7280",
-              fontSize: "0.8rem",
-              flexWrap: "wrap",
-              gap: 10,
-            }}
-          >
-            <div style={{ fontWeight: 600 }}>
-              Showing{" "}
-              <span style={{ color: TEXT_COLOR }}>
-                {(page - 1) * pageSize + 1}
-              </span>
-              –
-              <span style={{ color: TEXT_COLOR }}>
-                {Math.min(page * pageSize, filtered.length)}
-              </span>{" "}
-              of <span style={{ color: TEXT_COLOR }}>{filtered.length}</span>
-            </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <motion.button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                whileHover={{ scale: page === 1 ? 1 : 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  background: "transparent",
-                  border: `1px solid ${BORDER_COLOR}`,
-                  color: page === 1 ? "#9ca3af" : TEXT_COLOR,
-                  borderRadius: 4,
-                  padding: "6px 12px",
-                  cursor: page === 1 ? "not-allowed" : "pointer",
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  transition: "all 0.2s",
-                }}
-              >
-                ‹ Previous
-              </motion.button>
-              <div
-                style={{
-                  color: "#fff",
-                  fontWeight: 700,
-                  background: `linear-gradient(135deg, ${ACCENT_COLOR}, #b91c28)`,
-                  padding: "6px 12px",
-                  borderRadius: 4,
-                  minWidth: 60,
-                  textAlign: "center",
-                  fontSize: "0.8rem",
-                }}
-              >
-                Page {page}
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="mb-1">Edit User</h5>
+                <div className="text-muted small">
+                  ID: <span className="fw-semibold">{edit.id}</span>
+                </div>
               </div>
-              <motion.button
-                onClick={() =>
-                  setPage((p) =>
-                    p * pageSize < filtered.length ? p + 1 : p
-                  )
-                }
-                disabled={page * pageSize >= filtered.length}
-                whileHover={{
-                  scale: page * pageSize >= filtered.length ? 1 : 1.05,
-                }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  background: "transparent",
-                  border: `1px solid ${BORDER_COLOR}`,
-                  color:
-                    page * pageSize >= filtered.length
-                      ? "#9ca3af"
-                      : TEXT_COLOR,
-                  borderRadius: 4,
-                  padding: "6px 12px",
-                  cursor:
-                    page * pageSize >= filtered.length
-                      ? "not-allowed"
-                      : "pointer",
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  transition: "all 0.2s",
-                }}
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setEdit(null)}
               >
-                Next ›
-              </motion.button>
+                Close
+              </button>
             </div>
           </div>
+
+          <div className="card-body">
+            <div className="row g-3">
+              {getEditableFields(edit).map((key) => (
+                <div className="col-md-4" key={key}>
+                  <label className="form-label small fw-semibold text-capitalize">
+                    {key}
+                  </label>
+                  <input
+                    className="form-control form-control-sm"
+                    style={{ borderRadius: 10 }}
+                    value={edit[key] ?? ""}
+                    onChange={(e) =>
+                      setEdit({ ...edit, [key]: e.target.value })
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 d-flex justify-content-between">
+              <button
+                className="btn btn-outline-danger btn-sm"
+                onClick={() => del(edit.id)}
+              >
+                Delete User
+              </button>
+              <button className="btn btn-primary btn-sm" onClick={save}>
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </motion.div>
       )}
+
+     
+      <div
+        className="card shadow-sm border-0"
+        style={{
+          borderRadius: 18,
+          overflow: "hidden",
+          backgroundColor: "#ffffff",
+        }}
+      >
+        <div
+          className="px-4 py-3 border-bottom"
+          style={{ backgroundColor: "#f9fafb", borderColor: "#f3f4f6" }}
+        >
+          <h6 className="mb-0 fw-semibold">All Users</h6>
+        </div>
+
+        <div className="table-responsive">
+          <table
+            className="table table-hover align-middle mb-0"
+            style={{ marginBottom: 0 }}
+          >
+            <thead>
+              <tr
+                className="text-muted small"
+                style={{ backgroundColor: "#f9fafb" }}
+              >
+                {tableKeys.map((k) => (
+                  <th key={k}>{k}</th>
+                ))}
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={tableKeys.length + 1 || 1}
+                    className="text-center text-muted py-4"
+                  >
+                    No users found.
+                  </td>
+                </tr>
+              )}
+
+              {filtered.map((u) => (
+                <tr key={u.id}>
+                  {tableKeys.map((k) => (
+                    <td key={k} className="small">
+                      {String(u[k])}
+                    </td>
+                  ))}
+                  <td>
+                    <div className="btn-group btn-group-sm">
+                      <button
+                        className="btn btn-outline-primary"
+                        onClick={() => setEdit(u)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-outline-danger"
+                        onClick={() => del(u.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+       
+        <div
+          className="card-body d-flex justify-content-between align-items-center"
+          style={{ borderTop: "1px solid #f3f4f6" }}
+        >
+          <span className="small text-muted">
+            Page {page + 1} of {Math.max(totalPages || 1, 1)}
+          </span>
+          <div className="btn-group">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              style={{ borderRadius: "999px 0 0 999px" }}
+              disabled={page === 0}
+              onClick={() => setPage(page - 1)}
+            >
+              Prev
+            </button>
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              style={{ borderRadius: "0 999px 999px 0" }}
+              disabled={page + 1 >= totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 }

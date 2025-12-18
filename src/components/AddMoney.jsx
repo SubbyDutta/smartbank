@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import API from "../api";
 import { jwtDecode } from "jwt-decode";
 import { motion } from "framer-motion";
-
+import { v4 as uuidv4 } from "uuid";
 export default function AddMoney({ onSuccess }) {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,13 +53,14 @@ export default function AddMoney({ onSuccess }) {
               const decoded = jwtDecode(token);
               username = decoded.sub;
             }
-
+             const key = uuidv4();
             const verifyRes = await API.post("/payment/verify", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               amount: Number(amount),
               username,
+              key
             });
 
             if (verifyRes.data.success) {
@@ -105,12 +106,14 @@ export default function AddMoney({ onSuccess }) {
 
   const panelStyle = {
     width: 800,
-    top:-30,
+   
     borderRadius: 24,
     background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
     position: "relative",
     overflow: "hidden",
     boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+      top: 10,
+    position: "fixed",
   };
 
   return (
@@ -135,7 +138,7 @@ export default function AddMoney({ onSuccess }) {
       />
 
       <div style={{ position: "relative", zIndex: 2 }}>
-        {/* Header */}
+      
         <div className="text-center mb-4">
           <div className="d-inline-block mb-3">
             <div
@@ -173,7 +176,7 @@ export default function AddMoney({ onSuccess }) {
           </p>
         </div>
 
-        {/* Payment Gateway Badge */}
+        
         <div className="d-flex justify-content-center mb-4">
           <div style={{
             background: "#fff",
@@ -203,7 +206,7 @@ export default function AddMoney({ onSuccess }) {
           </div>
         </div>
 
-        {/* Form */}
+       
         <motion.form
           onSubmit={handleAddMoney}
           initial={{ opacity: 0, y: 20 }}
@@ -255,7 +258,7 @@ export default function AddMoney({ onSuccess }) {
             </div>
           </div>
 
-          {/* Quick Amount Buttons */}
+         
           <div className="mb-4">
             <label className="form-label fw-semibold mb-2" style={{ fontSize: "0.85rem" }}>
               Quick Amount:
@@ -282,7 +285,7 @@ export default function AddMoney({ onSuccess }) {
             </div>
           </div>
 
-          {/* Buttons */}
+          
           <div className="d-flex gap-3">
             <motion.button
               className="btn btn-danger w-100"
@@ -290,12 +293,13 @@ export default function AddMoney({ onSuccess }) {
               disabled={loading}
               style={{
                 fontWeight: 600,
+                height: 60,
                 borderRadius: 12,
                 padding: "14px",
                 fontSize: "1rem",
               }}
               variants={buttonVariants}
-              whileHover="hover"
+              
               whileTap="tap"
             >
               {loading ? (
@@ -320,6 +324,7 @@ export default function AddMoney({ onSuccess }) {
               style={{
                 fontWeight: 600,
                 borderRadius: 12,
+                height: 60,
                 padding: "14px 24px",
                 fontSize: "1rem",
               }}
@@ -327,12 +332,12 @@ export default function AddMoney({ onSuccess }) {
               whileHover="hover"
               whileTap="tap"
             >
-              <i className="bi bi-x-circle me-2"></i>
+            
               Clear
             </motion.button>
           </div>
 
-          {/* Message */}
+         
           {msg && typeof msg === 'object' && msg.text && (
             <motion.div
               className="mt-3 alert d-flex align-items-center gap-2 mb-0"
@@ -354,7 +359,7 @@ export default function AddMoney({ onSuccess }) {
           )}
         </motion.form>
 
-        {/* Security Footer */}
+        
         <motion.div
           className="mt-4 pt-3 border-top border-light d-flex align-items-center justify-content-center gap-3 flex-wrap text-muted small"
           initial={{ opacity: 0 }}

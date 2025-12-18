@@ -1,13 +1,11 @@
-
-import React, { useState, useEffect } from "react";
-import API from "../api";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { UserPlus, CheckCircle } from "lucide-react";
+import API from "../api";
+import "../styles/auth.css";
 
-const Signup = () => {
-  const [creditScore, setCreditScore] = useState("");
-const [noCredit, setNoCredit] = useState(false);
-
+export default function Signup() {
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -16,396 +14,307 @@ const [noCredit, setNoCredit] = useState(false);
     mobile: "",
     creditScore: "",
   });
+  const [noCredit, setNoCredit] = useState(false);
   const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.innerHTML = `
-      .signup-container {
-        display: flex;
-        height: 100vh;
-        overflow: hidden;
-        font-family: "Poppins", sans-serif;
-      }
-
-      /* LEFT SIDE */
-      .signup-left {
-        flex: 1;
-        background: linear-gradient(135deg, #eb2525ff, #ff6b81);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 2rem;
-      }
-
-      .signup-left h1 {
-        font-size: 2.2rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-      }
-
-      .signup-left p {
-        max-width: 420px;
-        font-size: 1rem;
-        opacity: 0.9;
-      }
-
-      .signup-left img {
-        width: 280px;
-        margin-top: 2rem;
-        animation: float 3s ease-in-out infinite;
-      }
-
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-      }
-
-      /* RIGHT SIDE */
-      .signup-right {
-        flex: 1;
-        background: #fff;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .signup-card {
-        width: 400px;
-        padding: 2rem;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.15);
-        animation: fadeUp 0.6s ease-in-out;
-      }
-
-      @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .signup-card h3 {
-        text-align: center;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-      }
-
-      .signup-card p {
-        text-align: center;
-        color: #888;
-        margin-bottom: 1.5rem;
-      }
-
-      .input {
-        width: 100%;
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
-        outline: none;
-        transition: 0.2s ease;
-      }
-
-      .input:focus {
-        border-color: #eb2525ff;
-        box-shadow: 0 0 0 0.15rem rgba(235, 37, 37, 0.25);
-      }
-
-      .primary {
-        background: linear-gradient(90deg, #ff6b81, #e63946);
-        color: white;
-        font-weight: 600;
-        border: none;
-        border-radius: 10px;
-        padding: 10px;
-        cursor: pointer;
-        transition: 0.3s ease;
-      }
-
-      .primary:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.05);
-      }
-
-      .error-text {
-        color: #e63946;
-        text-align: center;
-        font-weight: 600;
-        margin-bottom: 10px;
-      }
-
-      .small-muted {
-        text-align: center;
-        font-size: 0.9rem;
-        margin-top: 10px;
-      }
-
-      .small-muted a {
-        color: #e63946;
-        font-weight: 600;
-        text-decoration: none;
-      }
-
-      /* RESPONSIVE */
-      @media (max-width: 850px) {
-        .signup-container {
-          flex-direction: column;
-        }
-
-        .signup-left {
-          height: 40vh;
-        }
-
-        .signup-left img {
-          width: 200px;
-        }
-
-        .signup-right {
-          height: 60vh;
-        }
-
-        .signup-card {
-          width: 90%;
-          margin: 0 auto;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccessMsg("");
 
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match!");
       return;
     }
 
-    try {
-      const res = await API.post("/auth/signup", {
-        username: form.username,
-        password: form.password,
-        email: form.email,
-        mobile: form.mobile,
-        creditScore: noCredit ? null : creditScore,
-        
-      });
+    if (!noCredit && !form.creditScore) {
+      setError("Please enter your credit score or check 'No credit score'");
+      return;
+    }
 
-      const message = res.data;
-      if (message.includes("already exists")) {
-        setError(message);
+    try {
+      const payload = { ...form };
+      if (noCredit) payload.creditScore = "0";
+
+      const res = await API.post("/auth/signup", payload);
+
+      if (typeof res.data === "string" && res.data.includes("already exists")) {
+        setError(res.data);
       } else {
-        setSuccessMsg("🎉 Signup Successful! Redirecting to login...");
+        setSuccess(true);
         setTimeout(() => {
-          navigate("/login");
-        }, 2500);
+          setSuccess(false); 
+          navigate("/login"); 
+        }, 2000); 
       }
     } catch (err) {
-      console.error(err);
       setError("Signup failed. Please try again.");
     }
   };
 
+  const updateForm = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   return (
-    <div className="signup-container">
-      {/* LEFT SIDE */}
-      <div className="signup-left">
-        <h1>Join Smart Bank Today</h1>
-        <p>
-          Take control of your finances with Smart Bank’s smart banking.  
-          Create your account and start your digital journey today.
-        </p>
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/2436/2436826.png"
-          alt="Bank illustration"
-        />
-      </div>
-
-      {/* RIGHT SIDE */}
-      <div className="signup-right">
-        <motion.div
-          className="signup-card"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h3>Create Account</h3>
-          <p>Sign up to access your Smart Bank dashboard</p>
-
-          {error && <div className="error-text">{error}</div>}
-
-          <form onSubmit={handleSubmit} className="d-flex flex-column gap-3">
-            <input
-              className="input"
-              placeholder="Username"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              required
-            />
-            <input
-              className="input"
-              type="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-            />
-            <input
-              className="input"
-              type="tel"
-              placeholder="Mobile Number"
-              value={form.mobile}
-              onChange={(e) => setForm({ ...form, mobile: e.target.value })}
-              required
-            />
-            <input
-              className="input"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-            />
-            <input
-              className="input"
-              type="password"
-              placeholder="Confirm Password"
-              value={form.confirmPassword}
-              onChange={(e) =>
-                setForm({ ...form, confirmPassword: e.target.value })
-              }
-              required
-            />
-         
-
-              {/* ⭐ Credit Score Section */}
-              <div className="d-flex flex-column gap-2 mt-2">
-                <input
-                  className="input"
-                  type="number"
-                  placeholder="Credit Score (300 - 900)"
-                  value={creditScore}
-                  disabled={noCredit}
-                  min="300"
-                  max="900"
-                  onChange={(e) => setCreditScore(e.target.value)}
-                />
-
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", color: "#444" }}>
-                  <input
-                    type="checkbox"
-                    checked={noCredit}
-                    onChange={() => {
-                      setNoCredit(!noCredit);
-                      if (!noCredit) setCreditScore(""); // clear when checked
-                    }}
-                  />
-                  I don’t have a credit score yet
-                </label>
-              </div>
-
-
-            <motion.button
-              type="submit"
-              className="primary mt-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Sign Up
-            </motion.button>
-          </form>
-
-          <div className="small-muted">
-            Already have an account? <a href="/login">Login</a>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* SUCCESS POPUP */}
-      <AnimatePresence>
-        {successMsg && (
+    <div
+      className="auth-container"
+      style={{
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        gridTemplateColumns: "1.1fr 0.9fr",
+        overflow: "hidden",
+      }}
+    >
+      
+      <motion.div
+        className="auth-left"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "1rem",
+        }}
+      >
+        <div className="auth-left-content" style={{ maxWidth: 280 }}>
           <motion.div
-            key="overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
             style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              background: "rgba(255, 200, 200, 0.5)",
-              backdropFilter: "blur(5px)",
+              width: 64,
+              height: 64,
+              borderRadius: 14,
+              background: "rgba(255,255,255,0.25)",
+              backdropFilter: "blur(10px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              zIndex: 9999,
+              margin: "0 auto 1rem",
             }}
           >
+            <UserPlus size={32} />
+          </motion.div>
+
+          <h1 style={{ fontSize: "1.6rem", marginBottom: "0.5rem" }}>Join SecureBank</h1>
+          <p style={{ fontSize: "0.88rem", marginBottom: "1rem", lineHeight: 1.3 }}>
+            Secure banking with fraud protection.
+          </p>
+
+          <motion.img
+            src="https://cdn-icons-png.flaticon.com/512/2436/2436826.png"
+            alt="Banking"
+            style={{ width: 140, height: 140 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          />
+        </div>
+      </motion.div>
+
+     
+      <motion.div
+        className="auth-right"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "1rem",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          className="auth-card"
+          style={{
+            width: "100%",
+            maxWidth: 360,
+            padding: "1.25rem",
+            borderRadius: 14,
+            maxHeight: "95vh",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ marginBottom: "0.75rem" }}>
+            <h3 style={{ margin: 0, fontSize: "1.4rem" }}>Create Account</h3>
+            <p style={{ margin: "0.25rem 0 0", fontSize: "0.82rem", opacity: 0.75 }}>
+              Quick signup
+            </p>
+          </div>
+
+          {error && (
             <motion.div
-              key="popup"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              style={{
-                background: "white",
-                borderRadius: "18px",
-                border: "2px solid #ffb3b3",
-                boxShadow: "0 12px 30px rgba(255, 0, 0, 0.25)",
-                padding: "30px 50px",
-                textAlign: "center",
-                color: "#a60000",
+              className="alert alert-error"
+              style={{ marginBottom: "0.75rem", padding: "0.4rem 0.6rem", fontSize: "0.82rem" }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {error}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+              <div>
+                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Username</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Username"
+                  value={form.username}
+                  onChange={(e) => updateForm("username", e.target.value)}
+                  required
+                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Email</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  placeholder="email@ex.com"
+                  value={form.email}
+                  onChange={(e) => updateForm("email", e.target.value)}
+                  required
+                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
+                />
+              </div>
+            </div>
+
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+              <div>
+                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Mobile</label>
+                <input
+                  type="tel"
+                  className="form-input"
+                  placeholder="1234567890"
+                  value={form.mobile}
+                  onChange={(e) => updateForm("mobile", e.target.value)}
+                  required
+                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Credit Score</label>
+                <input
+                  type="number"
+                  className="form-input"
+                 
+                  value={form.creditScore}
+                  onChange={(e) => updateForm("creditScore", e.target.value)}
+                  disabled={noCredit}
+                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
+                />
+              </div>
+            </div>
+
+           
+            <div>
+              <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Password</label>
+              <input
+                type="password"
+                className="form-input"
+                placeholder="Password"
+                value={form.password}
+                onChange={(e) => updateForm("password", e.target.value)}
+                required
+                style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Confirm Password</label>
+              <input
+                type="password"
+                className="form-input"
+                placeholder="Confirm"
+                value={form.confirmPassword}
+                onChange={(e) => updateForm("confirmPassword", e.target.value)}
+                required
+                style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
+              />
+            </div>
+
+           
+            <label style={{ 
+              fontSize: "0.8rem", 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "0.4rem",
+              opacity: noCredit ? 0.6 : 1,
+              marginBottom: "0.75rem"
+            }}>
+              <input
+                type="checkbox"
+                checked={noCredit}
+                onChange={(e) => setNoCredit(e.target.checked)}
+                style={{ width: 16, height: 16 }}
+              />
+              No credit score yet
+            </label>
+
+            <motion.button
+              type="submit"
+              className="btn-primary"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ 
+                padding: "0.65rem", 
+                fontSize: "0.95rem",
+                borderRadius: 10,
+              
               }}
             >
+              Create Account
+            </motion.button>
+          </form>
+
+          <div  className="auth-footer">
+            Already have account? <a href="/login" style={{ color: "#f63b3bff" }}>Sign In</a>
+          </div>
+        </div>
+      </motion.div>
+
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            className="success-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="success-modal"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+            >
               <motion.div
+                className="success-icon"
                 initial={{ scale: 0 }}
-                animate={{ scale: 1.2 }}
-                transition={{ type: "spring", stiffness: 120, damping: 8 }}
-                style={{
-                  width: "65px",
-                  height: "65px",
-                  borderRadius: "50%",
-                  background: "#ffcccc",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  boxShadow: "0 0 25px rgba(255,0,0,0.3)",
-                  margin: "0 auto 12px",
-                }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
               >
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  style={{ fontSize: "28px" }}
-                >
-                  ✅
-                </motion.span>
+                <CheckCircle size={36} />
               </motion.div>
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                style={{ fontWeight: 600, fontSize: "16px", color: "#a60000" }}
-              >
-                {successMsg}
-              </motion.p>
+              <h4 style={{ margin: "0.5rem 0" }}>Success!</h4>
+              <p style={{ margin: 0, fontSize: "0.9rem" }}>Redirecting to login...</p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-};
-
-export default Signup;
+}

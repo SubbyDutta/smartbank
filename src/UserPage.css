@@ -11,11 +11,11 @@
 
   .up-root {
     min-height: 100vh;
-    display: flex;
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', system-ui, sans-serif;
     transition: var(--transition);
+    position: relative;
   }
 
   .up-sidebar {
@@ -30,16 +30,16 @@
   }
 
   .up-avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: #ffe5e9; /* light red background */
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: #ffe5e9;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--accent);
-    font-size: 22px;
+    font-size: 18px;
     transition: var(--transition);
   }
   .up-avatar:hover {
@@ -49,13 +49,13 @@
 
   .up-username {
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
   }
   .up-role {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11px;
     margin-top: 2px;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.5px;
   }
 
   .up-nav {
@@ -70,10 +70,11 @@
     border: none;
     color: #3b3b3b;
     text-align: left;
-    padding: 10px 8px;
+    padding: 8px 6px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
+    font-size: 0.9rem;
     transition: var(--transition);
   }
   .up-btn:hover {
@@ -97,19 +98,19 @@
   }
 
   .up-main {
-    flex: 1;
-    padding: 32px;
-    display: flex;
-    justify-content: center;
+    margin-left: 280px;
+    margin-right: 330px;
+    padding: 24px;
+    min-height: 100vh;
     animation: fadeIn 0.4s ease;
   }
 
   .up-card {
     width: 100%;
-    max-width: 1180px;
+    max-width: 1100px;
     background: var(--panel);
-    border-radius: 14px;
-    padding: 22px;
+    border-radius: 12px;
+    padding: 18px;
     border: 1px solid rgba(0,0,0,0.06);
     box-shadow: var(--shadow);
     transition: var(--transition);
@@ -123,15 +124,15 @@
   }
 
   .up-welcome {
-    font-size: 20px;
+    font-size: 18px;
     margin: 0;
     color: #1a1a1a;
   }
 
   .up-sub {
     color: var(--muted);
-    font-size: 13px;
-    margin-top: 6px;
+    font-size: 12px;
+    margin-top: 5px;
   }
 
   .up-balance {
@@ -139,81 +140,73 @@
   }
   .up-balance .title {
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
   }
   .up-balance .value {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 800;
     color: var(--accent);
-    margin-top: 6px;
+    margin-top: 5px;
   }
   .acct-number {
     color: var(--muted);
-    font-size: 13px;
-    margin-top: 6px;
+    font-size: 12px;
+    margin-top: 5px;
   }
 
   .up-grid {
-    display: grid;
-    grid-template-columns: 1fr 360px;
+    display: flex;
+    flex-direction: column;
     gap: 18px;
     margin-top: 18px;
-    align-items: start;
   }
 
   .up-left {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    width: 100%;
   }
 
   .panel {
     background: #ffffff;
-    padding: 16px;
+    padding: 14px;
     border-radius: 10px;
     border: 1px solid rgba(0,0,0,0.05);
     transition: var(--transition);
-    
   }
   .panel:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+    transform: translateY(-1px);
   }
- .panel::-webkit-scrollbar {
-  height: 8px;
-}
-
-.panel::-webkit-scrollbar-thumb {
-  background-color: #c70000;
-  border-radius: 10px;
-}
-
-.panel::-webkit-scrollbar-track {
-  background: #ffeaea;
-}
+  .panel::-webkit-scrollbar {
+    display: none;
+  }
 
   .primary {
     background: linear-gradient(90deg, #ff6b81, #e63946);
     border: none;
     color: #ffffff;
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
     cursor: pointer;
-    box-shadow: 0 8px 20px rgba(230,57,70,0.25);
+    box-shadow: 0 6px 16px rgba(230,57,70,0.2);
     transition: var(--transition);
   }
   .primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(230,57,70,0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(230,57,70,0.3);
   }
 
   .ghost {
     background: transparent;
     border: 1px solid rgba(0,0,0,0.08);
     color: var(--muted);
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: var(--transition);
   }
@@ -235,36 +228,31 @@
 table.up-table th {
   color: white;
   font-weight: 600;
-  padding: 12px 14px;
+  padding: 10px 12px;
   text-align: left;
-  background: rgb(0, 0, 0); /* subtle red tint */
-  
-  border-right: #d72121ea ;
-  border-width: 2px;
+  background: #1f2937;
+  font-size: 0.85rem;
 }
 
-/* Table cells */
 table.up-table td {
-  padding: 12px 14px;
+  padding: 10px 12px;
   text-align: left;
   background: transparent;
+  font-size: 0.85rem;
   transition: var(--transition);
 }
 
-/* Card-like rows */
 table.up-table tbody tr {
-     background: #f0f0f0;
- /* very light red */
+  background: #f9fafb;
   border-radius: 2px; 
   transition: background 0.2s ease, transform 0.2s ease;
   cursor: pointer;
 }
 
-/* Hover effect */
 table.up-table tbody tr:hover {
-   background: #f4d4d4; /* slightly stronger red */
+  background: #f3f4f6;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(230,57,70,0.08);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
 }
 
 /* Column separation: subtle vertical lines */
@@ -297,17 +285,18 @@ table.up-table tbody tr td:last-child {
 
   .input, .select {
     width: 100%;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid rgba(0,0,0,0.08);
     background: #ffffff;
     color: #1a1a1a;
+    font-size: 0.9rem;
     transition: var(--transition);
   }
   .input:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(230,57,70,0.15);
+    box-shadow: 0 0 0 3px rgba(230,57,70,0.1);
   }
 
   .chat-wrap { display:flex; gap:12px; }
@@ -354,8 +343,18 @@ table.up-table tbody tr td:last-child {
   }
 
   @media (max-width: 980px) {
-    .up-grid { grid-template-columns: 1fr; }
-    .up-sidebar { display:none; }
+    .up-main {
+      margin-left: 0;
+      margin-right: 0;
+      padding: 16px;
+    }
+    .up-sidebar { 
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+    }
+    .up-sidebar.active {
+      transform: translateX(0);
+    }
     .up-card { padding:16px; }
   }
   /* DashboardPanel - Enhanced Production Styles */

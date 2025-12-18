@@ -1,214 +1,174 @@
-import React, { useState, useEffect } from "react";
-import API from "../api";
-import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { jwtDecode } from 'jwt-decode';
+import { Shield, ArrowRight } from 'lucide-react';
+import API from '../api';
+import '../styles/auth.css';
 
 export default function Login() {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [error, setError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const style = document.createElement("style");
-    style.innerHTML = `
-      body {
-        margin: 0;
-        font-family: "Poppins", sans-serif;
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = jwtDecode(token);
+        const role = payload.role || payload?.authorities || payload?.roles || payload?.roleName;
+        setIsLoggedIn(true);
+        setUserRole(role);
+      } catch (e) {
+        localStorage.removeItem('token');
       }
-
-      .login-container {
-        display: flex;
-        height: 100vh;
-        overflow: hidden;
-      }
-
-      /* Left Section */
-      .login-left {
-        flex: 1;
-        background: linear-gradient(135deg, #eb2525ff, #ff6b81);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
-        text-align: center;
-      }
-
-      .login-left h1 {
-        font-size: 2.3rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-      }
-
-      .login-left p {
-        font-size: 1rem;
-        opacity: 0.9;
-        max-width: 420px;
-      }
-
-      .login-left img {
-        width: 280px;
-        margin-top: 2rem;
-        animation: float 3s ease-in-out infinite;
-      }
-
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-      }
-
-      /* Right Section */
-      .login-right {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #fff;
-      }
-
-      .card {
-        width: 380px;
-        background: rgba(255, 255, 255, 0.95);
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
-        padding: 2rem;
-        animation: fadeUp 0.6s ease-in-out;
-      }
-
-      @keyframes fadeUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
-
-      .btn-primary {
-        background: linear-gradient(90deg, #ff6b81, #e63946);
-        border: none;
-        transition: all 0.3s ease;
-      }
-
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.05);
-      }
-
-      .btn-outline-light {
-        background: white;
-        border: 1px solid #eb2525ff;
-      }
-
-      .btn-outline-light:hover {
-        background: linear-gradient(90deg, #ff6b81, #e63946);
-        color: white;
-      }
-
-      .form-control {
-        border-radius: 10px;
-        border: 1px solid #d1d5db;
-        transition: all 0.2s ease;
-      }
-
-      .form-control:focus {
-        border-color: #eb2525ff;
-        box-shadow: 0 0 0 0.2rem rgba(235,37,37,0.25);
-      }
-
-      .alert {
-        border-radius: 10px;
-        font-size: 0.9rem;
-      }
-
-      /* Mobile Responsive */
-      @media (max-width: 850px) {
-        .login-container {
-          flex-direction: column;
-        }
-
-        .login-left {
-          height: 40vh;
-          padding: 1rem;
-        }
-
-        .login-left img {
-          width: 200px;
-        }
-
-        .login-right {
-          height: 60vh;
-        }
-
-        .card {
-          width: 90%;
-          margin: 0 auto;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
+    }
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage(null);
+    setError('');
     setLoading(true);
+
     try {
-      const res = await API.post("/auth/login", form);
-      const token = res.data.token ?? res.data?.accessToken ?? null;
-      if (!token) throw new Error("No token returned");
-      localStorage.setItem("token", token);
+      const res = await API.post('/auth/login', form);
+      const token = res.data.token ?? res.data?.accessToken;
+      
+      if (!token) throw new Error('No token received');
+      
+      localStorage.setItem('token', token);
       const payload = jwtDecode(token);
-      const role =
-        payload.role || payload?.authorities || payload?.roles || payload?.roleName;
-      if (String(role ?? "").toUpperCase().includes("ADMIN")) navigate("/admin");
-      else navigate("/user");
+      const role = payload.role || payload?.authorities || payload?.roles || payload?.roleName;
+      
+      if (String(role ?? '').toUpperCase().includes('ADMIN')) {
+        navigate('/admin');
+      } else {
+        navigate('/user');
+      }
     } catch (err) {
-      console.error(err);
-      setMessage({ type: "error", text: "Login failed. Check username/password or server." });
+      setError('Invalid credentials. Please check your username and password.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="login-container">
-      {/* LEFT SIDE */}
-      <div className="login-left">
-        <h1>Welcome to SmartBank</h1>
-        <p>
-          Experience smart, secure, and seamless digital banking.  
-          Manage your money, loans, and transactions all in one place.
-        </p>
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/3135/3135789.png"
-          alt="Bank Illustration"
-        />
-      </div>
-
-      {/* RIGHT SIDE */}
-      <div className="login-right">
-        <div className="card">
-          <h4 className="mb-3 text-center fw-semibold">Sign In</h4>
-          <p className="text-center text-muted mb-3">Access your Smart Bank account</p>
-
-          {message && (
-            <div
-              className={`alert ${
-                message.type === "error" ? "alert-danger" : "alert-success"
-              }`}
-              role="alert"
-            >
-              {message.text}
+  if (isLoggedIn) {
+    return (
+      <div className="auth-container">
+        <div className="auth-right" style={{ flex: 1, margin: 'auto' }}>
+          <div className="auth-card" style={{ textAlign: 'center' }}>
+            <h3>Already Logged In</h3>
+            <p>You are currently logged in. Where would you like to go?</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
+              <motion.button
+                className="btn-primary"
+                onClick={() => navigate(String(userRole ?? '').toUpperCase().includes('ADMIN') ? '/admin' : '/user')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Go to Dashboard
+                <ArrowRight size={18} style={{ marginLeft: '0.5rem', display: 'inline' }} />
+              </motion.button>
+              
+              <button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  setIsLoggedIn(false);
+                  setUserRole(null);
+                }}
+                style={{
+                  padding: '0.75rem',
+                  background: 'transparent',
+                  border: '1px solid #e63946',
+                  color: '#e63946',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Logout and Login as Different User
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="auth-container">
+      <motion.div 
+        className="auth-left"
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="auth-left-content">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, type: "spring" }}
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 20,
+              background: "rgba(255,255,255,0.2)",
+              backdropFilter: "blur(10px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 2rem",
+            }}
+          >
+            <Shield size={40} />
+          </motion.div>
+          
+            <h1>Welcome Back!</h1>
+            <p>
+              Sign in to access your secure banking dashboard and manage your finances with confidence.
+            </p>
+          
+          <motion.img
+            src="https://cdn-icons-png.flaticon.com/512/3135/3135789.png"
+            alt="Banking"
+            className="auth-illustration"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          />
+        </div>
+      </motion.div>
+
+      <motion.div 
+        className="auth-right"
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="auth-card">
+          <h3>Sign In</h3>
+          <p>Enter your credentials to access your account</p>
+
+          {error && (
+            <motion.div
+              className="alert alert-error"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {error}
+            </motion.div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label small fw-medium">Username</label>
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label className="form-label">Username</label>
               <input
                 type="text"
-                className="form-control"
+                className="form-input"
                 placeholder="Enter your username"
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -216,11 +176,11 @@ export default function Login() {
               />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label small fw-medium">Password</label>
+            <div className="form-group">
+              <label className="form-label">Password</label>
               <input
                 type="password"
-                className="form-control"
+                className="form-input"
                 placeholder="Enter your password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -228,37 +188,30 @@ export default function Login() {
               />
             </div>
 
-            <div className="d-flex gap-2">
-              <button className="btn btn-primary w-100" type="submit" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-light text-danger"
-                onClick={() => navigate("/forgot-password")}
-              >
-                Reset
-              </button>
-            </div>
+            <motion.button
+              type="submit"
+              className="btn-primary"
+              disabled={loading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {loading ? 'Signing in...' : (
+                <>
+                  Sign In
+                  <ArrowRight size={18} style={{ marginLeft: '0.5rem', display: 'inline' }} />
+                </>
+              )}
+            </motion.button>
           </form>
 
-          <div className="text-center mt-3">
-            <small className="text-muted">
-              Don't have an account?{" "}
-              <a href="/" className="text-decoration-none fw-semibold text-danger">
-                Sign Up
-              </a>{" "}
-              |{" "}
-              <a
-                href="/forgot-password"
-                className="text-decoration-none fw-semibold text-black"
-              >
-                Forgot Password?
-              </a>
-            </small>
+          <div className="auth-footer">
+            Don't have an account?{' '}
+            <a href="/signup">Create Account</a>
+            <br />
+            <a href="/forgot-password">Forgot Password?</a>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

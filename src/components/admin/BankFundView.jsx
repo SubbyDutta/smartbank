@@ -76,7 +76,7 @@ export default function BankFundView({ showAlert, showPopup }) {
                 overflow: "hidden",
             }}
         >
-            {/* Header */}
+           
             <div
                 style={{
                     display: "flex",
@@ -125,7 +125,7 @@ export default function BankFundView({ showAlert, showPopup }) {
                 </div>
             </div>
 
-            {/* Balance Display */}
+           
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -205,7 +205,7 @@ export default function BankFundView({ showAlert, showPopup }) {
                 )}
             </motion.div>
 
-            {/* Top-up Controls */}
+           
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}

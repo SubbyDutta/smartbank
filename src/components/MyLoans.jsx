@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import API from "../api"; 
-
+import { v4 as uuidv4 } from "uuid";
 const fmtINR = (v) =>
   typeof v === "number"
     ? v.toLocaleString("en-IN", { style: "currency", currency: "INR" })
@@ -85,7 +85,10 @@ export default function LoanRepaymentPanel() {
 
     try {
       setBtnBusy(true);
-      const res = await API.post(`/repay/repay/${summary.loanId}`, { amount });
+      const idempotencyKey = uuidv4();
+      const res = await API.post(`/repay/repay/${summary.loanId}`, { amount }, {headers: {
+        "idempotency-Key": idempotencyKey}
+      },);
       
       const [sumRes, loansRes] = await Promise.all([
         API.get(`/repay/summary/${summary.loanId}`),
@@ -128,6 +131,9 @@ export default function LoanRepaymentPanel() {
     position: "relative",
     overflow: "hidden",
     boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+    top: 8,
+    height:700,
+    position: "fixed"
   };
 
   return (
@@ -138,7 +144,7 @@ export default function LoanRepaymentPanel() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      {/* top accent bar */}
+      
       <div
         style={{
           position: "absolute",
@@ -150,7 +156,7 @@ export default function LoanRepaymentPanel() {
         }}
       />
 
-      {/* header */}
+      
       <div className="mb-4 text-center">
         <div className="d-inline-block mb-3">
           <div
@@ -188,7 +194,7 @@ export default function LoanRepaymentPanel() {
         </p>
       </div>
 
-      {/* loan selector */}
+      
       <div
         className="card border-0 mb-4 p-3"
         style={{
@@ -216,7 +222,7 @@ export default function LoanRepaymentPanel() {
         </select>
       </div>
 
-      {/* summary */}
+     
       <div
         className="card border-0 mb-4"
         style={{
@@ -266,7 +272,7 @@ export default function LoanRepaymentPanel() {
           )}
         </div>
 
-        {/* pay actions */}
+        
         <div
           className="p-3 d-flex flex-column flex-md-row gap-2 border-top"
           style={{ background: "#fff6f6", borderRadius: "0 0 20px 20px" }}
@@ -295,12 +301,12 @@ export default function LoanRepaymentPanel() {
         </div>
       </div>
 
-      {/* feedback */}
+      
       {message && (
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="alert mt-2"
+          className="alert"
           style={{
             borderRadius: 12,
             border: "none",

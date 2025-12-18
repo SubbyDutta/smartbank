@@ -1,6 +1,9 @@
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Shield, Menu, X, LogOut } from "lucide-react";
+
+const SIDEBAR_WIDTH = 280;
 
 export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
   const ACCENT_COLOR = "#e63946"; 
@@ -13,33 +16,40 @@ export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
       style={{
         position: "fixed",
         top: 0,
-        left: 0,
+        left: sidebarOpen ? SIDEBAR_WIDTH : 0,
         right: 0,
-        zIndex: 2000,
-        backgroundColor: "#0f172a",
-        borderBottom: "1px solid #1e293b",
-        backdropFilter: "blur(10px)",
+        zIndex: 1500,
+        backgroundColor: "#ffffff",
+        borderBottom: "1px solid #f1f5f9",
         minHeight: "72px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0 24px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        transition: "left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      {/* LEFT */}
+     
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <motion.button
           onClick={toggleSidebar}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           style={{
             background: "transparent",
             border: "none",
-            color: ACCENT_COLOR,
+            color: "#6b7280",
             cursor: "pointer",
+            padding: "8px",
+            borderRadius: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.2s ease",
           }}
         >
-          {sidebarOpen ? <X size={26} /> : <Menu size={26} />}
+          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </motion.button>
 
         <motion.div
@@ -50,60 +60,38 @@ export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
         >
           <div
             style={{
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               borderRadius: "50%",
-              background: `linear-gradient(135deg, ${ACCENT_COLOR}, #ff7a85)`,
+              background: `linear-gradient(135deg, ${ACCENT_COLOR}, #f87171)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "#fff",
-              boxShadow: `0 4px 12px ${ACCENT_COLOR}70`,
+              boxShadow: `0 4px 12px rgba(230, 57, 70, 0.3)`,
             }}
           >
-            <Shield size={20} />
+            <Shield size={18} />
           </div>
           <div>
             <h5
               style={{
-                color: "#f1f5f9",
-                fontWeight: 700,
+                color: "#1f2937",
+                fontWeight: 600,
                 margin: 0,
+                fontSize: "1.1rem",
               }}
             >
-              Subby Admin
+             SMARTBANK
             </h5>
-            <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-              Control Panel
+            <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 500 }}>
+              Banking Management
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* RIGHT */}
-      <motion.button
-        onClick={onLogout}
-        whileHover={{
-          scale: 1.05,
-          boxShadow: `0 6px 15px ${ACCENT_COLOR}70`,
-        }}
-        whileTap={{ scale: 0.95 }}
-        style={{
-          background: `linear-gradient(135deg, ${ACCENT_COLOR}, #ff7a85)`,
-          border: "none",
-          color: "#fff",
-          fontWeight: 600,
-          padding: "8px 18px",
-          borderRadius: 10,
-          boxShadow: `0 4px 10px ${ACCENT_COLOR}40`,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}
-      >
-        <LogOut size={16} />
-        Logout
-      </motion.button>
+  
     </motion.header>
   );
 }

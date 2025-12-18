@@ -1,503 +1,530 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { jwtDecode } from "jwt-decode";
-import { motion, AnimatePresence } from "framer-motion";
-import { Shield, CheckCircle, AlertTriangle, RefreshCw, PiggyBank } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// src/AdminDashboard.jsx
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import API from "./api";
-import "./components/admin/styles/premium-fintech.css";
+import { jwtDecode } from "jwt-decode";
 
-// Views
-import AdminHeader from "./components/admin/AdminHeader";
 import AdminSidebar from "./components/admin/AdminSidebar";
-import StatTiles from "./components/admin/StatTiles";
+import AdminHeader from "./components/admin/AdminHeader";
+
 import TransactionsView from "./components/admin/TransactionsView";
 import UsersView from "./components/admin/UsersView";
 import AccountsView from "./components/admin/AccountsView";
 import LoansView from "./components/admin/LoansView";
 import AdminRepaymentTable from "./components/admin/AdminRepaymentTable";
-import BankFundView from "./components/admin/BankFundView"; 
 
-const PAGE_SIZE = 12;
-const ALERT_TIMEOUT = 5000;
-const POPUP_TIMEOUT = 3000;
+const PAGE = 0;
+const SIZE = 10;
+const SIDEBAR_WIDTH = 280;
 
 export default function AdminDashboard() {
-    const navigate = useNavigate();
+  const [view, setView] = useState("home");
 
-    // view selection
-    const [view, setView] = useState("home");
-    const [loading, setLoading] = useState(false);
-    const [alert, setAlert] = useState(null);
-    const [popup, setPopup] = useState(null);
-    const [error, setError] = useState(null);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [transPage, setTransPage] = useState(PAGE);
+  const [transTotalPages, setTransTotalPages] = useState(0);
 
-    // data
-    const [transactions, setTransactions] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [accounts, setAccounts] = useState([]);
-    const [loans, setLoans] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [userPage, setUserPage] = useState(PAGE);
+  const [userTotalPages, setUserTotalPages] = useState(0);
 
-    // edit form (users)
-    const [editForm, setEditForm] = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [accPage, setAccPage] = useState(PAGE);
+  const [accTotalPages, setAccTotalPages] = useState(0);
 
-    // queries & pages
-    const [transQuery, setTransQuery] = useState("");
-    const [transPage, setTransPage] = useState(1);
-    const [userQuery, setUserQuery] = useState("");
-    const [userPage, setUserPage] = useState(1);
-    const [accQuery, setAccQuery] = useState("");
-    const [accPage, setAccPage] = useState(1);
-    const [loanQuery, setLoanQuery] = useState("");
-    const [loanPage, setLoanPage] = useState(1);
+  const [loans, setLoans] = useState([]);
+  const [loanPage, setLoanPage] = useState(PAGE);
+  const [loanTotalPages, setLoanTotalPages] = useState(0);
 
-    // id search box
-    const [searchId, setSearchId] = useState("");
+  const [repayments, setRepayments] = useState([]);
+  const [repayPage, setRepayPage] = useState(PAGE);
+  const [repayTotalPages, setRepayTotalPages] = useState(0);
 
-    // Authentication guard
-    useEffect(() => {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                navigate("/login");
-                return;
-            }
-            const payload = jwtDecode(token);
-            const role = (payload.role || payload?.roles || "").toString().toUpperCase();
-            if (!role.includes("ADMIN")) {
-                showAlert("danger", "Access denied. Admin privileges required.");
-                setTimeout(() => navigate("/user"), 2000);
-            }
-        } catch (err) {
-            console.error("Authentication error:", err);
-            localStorage.removeItem("token");
-            navigate("/login");
-        }
-    }, [navigate]);
+  
+  const [bankPoolBalance, setBankPoolBalance] = useState(0);
+  const [showTopupModal, setShowTopupModal] = useState(false);
+  const [topupAmount, setTopupAmount] = useState("");
 
-    // Alert helpers
-    const showAlert = useCallback((type, message) => {
-        setAlert({ type, message });
-        setTimeout(() => setAlert(null), ALERT_TIMEOUT);
-    }, []);
+  const [adminUser, setAdminUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    const showPopup = useCallback((type, message) => {
-        setPopup({ type, message });
-        setTimeout(() => setPopup(null), POPUP_TIMEOUT);
-    }, []);
+  const token = localStorage.getItem("token");
 
-    // Error handler
-    const handleError = useCallback(
-        (error, context = "Operation") => {
-            console.error(`${context} error:`, error);
-            const message =
-                error?.response?.data?.message || error?.message || `${context} failed`;
-            showAlert("danger", message);
-            setError({ context, message, timestamp: Date.now() });
-        },
-        [showAlert]
-    );
-
-    const scalarize = (v) => {
-        if (v == null) return "";
-        if (Array.isArray(v)) return v.join("-");
-        if (typeof v === "object") {
-            if ("id" in v) return String(v.id);
-            if ("userId" in v) return String(v.userId);
-            if ("user_id" in v) return String(v.user_id);
-            if ("accountId" in v) return String(v.accountId);
-            try {
-                return JSON.stringify(v);
-            } catch {
-                return String(v);
-            }
-        }
-        return String(v);
-    };
-
-    const isFraudFlag = (t) =>
-        t?.is_fraud === 1 || t?.isFraud === 1 || t?.fraud === true;
-
-    // derived stats
-    const stats = useMemo(() => {
-        const fraudCount = transactions.filter(isFraudFlag).length;
-        const totalBalance = users.reduce(
-            (sum, u) => sum + (Number(u.balance) || 0),
-            0
-        );
-        return {
-            totalUsers: users.length,
-            totalTransactions: transactions.length,
-            fraudCount,
-            totalBalance,
-        };
-    }, [transactions, users]);
-
-    // ========= LOADERS =========
-
-    const fetchTransactions = useCallback(async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await API.get("/transactions/check");
-        setTransactions(res.data || []);
-        setView("transactions");
-      } catch (e) {
-        handleError(e, "Loading transactions");
-      } finally {
-        setLoading(false);
+  
+  useEffect(() => {
+    if (!token) return;
+    try {
+      const decoded = jwtDecode(token);
+      setAdminUser(decoded);
+      const r = (decoded.role || decoded.roles || "").toString().toUpperCase();
+      if (!r.includes("ADMIN")) {
+        alert("You are not authorized to access the admin panel.");
       }
-    }, [handleError]);
+    } catch (e) {
+      console.error("Failed to decode token", e);
+    }
+  }, [token]);
 
-    const fetchUsers = useCallback(async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await API.get("/admin/users");
-        setUsers(res.data || []);
-        setView("users");
-      } catch (e) {
-        handleError(e, "Loading users");
-      } finally {
-        setLoading(false);
-      }
-    }, [handleError]);
+ 
+  const extractPageData = (r) => ({
+    content: r?.data?.content || [],
+    totalPages: r?.data?.totalPages || 0,
+  });
 
-    const fetchAccounts = useCallback(async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await API.get("/admin/accounts");
-        setAccounts(res.data || []);
-        setView("accounts");
-      } catch (e) {
-        handleError(e, "Loading accounts");
-      } finally {
-        setLoading(false);
-      }
-    }, [handleError]);
+  
+  const loadTransactions = async (p = 0) => {
+    const r = await API.get(`/transactions/transactions?page=${p}&size=${SIZE}`);
+    const { content, totalPages } = extractPageData(r);
+    setTransactions(content);
+    setTransTotalPages(totalPages);
+  };
 
-    const fetchPendingLoans = useCallback(async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await API.get("/loan/pending");
-        setLoans(res.data || []);
-        setView("loans");
-      } catch (e) {
-        handleError(e, "Loading loan applications");
-      } finally {
-        setLoading(false);
-      }
-    }, [handleError]);
+  const loadUsers = async (p = 0) => {
+    const r = await API.get(`/admin/users?page=${p}&size=${SIZE}`);
+    const { content, totalPages } = extractPageData(r);
+    setUsers(content);
+    setUserTotalPages(totalPages);
+  };
 
-    const approveLoan = useCallback(
-        async (loanId) => {
-            if (
-                !window.confirm(
-                    `Are you sure you want to approve loan #${loanId}? This action cannot be undone.`
-                )
-            ) {
-                return;
-            }
+  const loadAccounts = async (p = 0) => {
+    const r = await API.get(`/admin/bankaccounts?page=${p}&size=${SIZE}`);
+    const { content, totalPages } = extractPageData(r);
+    setAccounts(content);
+    setAccTotalPages(totalPages);
+  };
 
-            setLoading(true);
-            try {
-                await API.post(`/loan/approve/${loanId}`);
-                showPopup("success", `Loan #${loanId} approved successfully`);
-                await fetchPendingLoans();
-            } catch (e) {
-                handleError(e, `Approving loan #${loanId}`);
-            } finally {
-                setLoading(false);
-            }
-        },
-        [fetchPendingLoans, handleError, showPopup]
-    );
+  const loadLoans = async (p = 0) => {
+    const r = await API.get(`/loan/pending?page=${p}&size=${SIZE}`);
+    const { content, totalPages } = extractPageData(r);
+    setLoans(content);
+    setLoanTotalPages(totalPages);
+  };
 
-    // User search helpers
-    const resolveId = (maybe) => {
-        if (maybe == null) return null;
-        return String(maybe?.id ?? maybe?.userId ?? maybe?.user_id ?? maybe);
-    };
+  const loadRepayments = async (p = 0) => {
+    const r = await API.get(`/repay?page=${p}&size=${SIZE}`);
+    const { content, totalPages } = extractPageData(r);
+    setRepayments(content);
+    setRepayTotalPages(totalPages);
+  };
 
-    const searchUser = useCallback(
-        async (idOverride) => {
-            const id = resolveId(idOverride ?? searchId);
-            if (!id || id.trim() === "") {
-                showAlert("warning", "Please enter a valid user ID");
-                return;
-            }
+  const loadBankPool = async () => {
+    try {
+      const res = await API.get("/pool");
+      setBankPoolBalance(res.data || 0);
+    } catch (err) {
+      console.error("Failed to load bank pool:", err);
+    }
+  };
 
-            setLoading(true);
-            setError(null);
+ 
+  useEffect(() => {
+    loadTransactions(0);
+    loadUsers(0);
+    loadLoans(0);
+    loadAccounts(0);
+    loadBankPool();
+  }, []);
 
-            try {
-                const userRes = await API.get(`/admin/user/${id}`);
-                const user = userRes.data;
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
 
-                // Fetch balance separately with fallback
-                let balance = null;
-                try {
-                    const balRes = await API.get(`/admin/balance/${id}`);
-                    const b = balRes.data;
-                    balance =
-                        typeof b === "number" ? b : b?.balance ?? b?.amount ?? null;
-                } catch (balErr) {
-                    console.warn("Balance fetch failed, using user balance:", balErr);
-                    balance = user.balance ?? null;
-                }
 
-                setEditForm({
-                    id: user.id ?? user.userId ?? user.user_id ?? "",
-                    username: user.username ?? "",
-                    email: user.email ?? "",
-                    mobile: user.mobile ?? "",
-                    role: user.role ?? "",
-                    balance: balance ?? "",
-                    ...user,
-                });
-                setView("editUser");
-            } catch (e) {
-                setEditForm(null);
-                handleError(e, "Searching for user");
-            } finally {
-                setLoading(false);
-            }
-        },
-        [searchId, handleError, showAlert]
-    );
+  const handleTopup = async () => {
+    const amount = parseFloat(topupAmount);
+    if (!amount || amount <= 0) {
+      alert("Enter a valid amount");
+      return;
+    }
 
-    const logout = useCallback(() => {
-        if (window.confirm("Are you sure you want to logout?")) {
-            localStorage.removeItem("token");
-            navigate("/login");
-        }
-    }, [navigate]);
+    try {
+      await API.post("/pool/topup", null, { params: { amount } });
+      setBankPoolBalance((prev) => prev + amount);
+      setShowTopupModal(false);
+      setTopupAmount("");
+    } catch (err) {
+      alert("Failed to top up bank pool");
+    }
+  };
 
-    // filtered + paged
-    const filteredTrans = useMemo(() => {
-        if (!transQuery) return transactions;
-        const q = transQuery.toLowerCase();
-        return transactions.filter((t) =>
-            Object.entries(t).some(
-                ([k, v]) => k !== "password" && scalarize(v).toLowerCase().includes(q)
-            )
-        );
-    }, [transactions, transQuery]);
+ 
+  const getTypeLabel = (isForeign) => {
+   
+    return isForeign === 0 ? "Domestic" : "Foreign";
+  };
 
-    const pagedTrans = useMemo(
-        () => filteredTrans.slice((transPage - 1) * PAGE_SIZE, transPage * PAGE_SIZE),
-        [filteredTrans, transPage]
-    );
+  const getTypeBadgeClass = (isForeign) => {
+   
+    return isForeign === 0
+      ? "badge bg-success-subtle text-success"
+      : "badge bg-warning-subtle text-warning";
+  };
 
-    const filteredUsers = useMemo(() => {
-        if (!userQuery) return users;
-        const q = userQuery.toLowerCase();
-        return users.filter((u) =>
-            Object.entries(u).some(
-                ([k, v]) => k !== "password" && scalarize(v).toLowerCase().includes(q)
-            )
-        );
-    }, [users, userQuery]);
+  
+  const HomeDashboard = () => {
+    const totalTransactionsEstimate = transTotalPages
+      ? transTotalPages * SIZE
+      : transactions.length;
+    const totalUsersEstimate = userTotalPages
+      ? userTotalPages * SIZE
+      : users.length;
+    const totalLoansEstimate = loanTotalPages
+      ? loanTotalPages * SIZE
+      : loans.length;
+    const totalAccountsEstimate = accTotalPages
+      ? accTotalPages * SIZE
+      : accounts.length;
 
-    const pagedUsers = useMemo(
-        () => filteredUsers.slice((userPage - 1) * PAGE_SIZE, userPage * PAGE_SIZE),
-        [filteredUsers, userPage]
-    );
-
-    const filteredAccounts = useMemo(() => {
-        if (!accQuery) return accounts;
-        const q = accQuery.toLowerCase();
-        return accounts.filter((a) =>
-            Object.entries(a).some(
-                ([k, v]) => scalarize(v).toLowerCase().includes(q)
-            )
-        );
-    }, [accounts, accQuery]);
-
-    const pagedAccounts = useMemo(
-        () => filteredAccounts.slice((accPage - 1) * PAGE_SIZE, accPage * PAGE_SIZE),
-        [filteredAccounts, accPage]
-    );
+    const cards = [
+      {
+        label: "Active Accounts",
+        value: totalAccountsEstimate,
+        badge: "Stable",
+      },
+      {
+        label: "Pending Loans",
+        value: totalLoansEstimate,
+        badge: "Review required",
+      },
+      {
+        label: "Transactions (est.)",
+        value: totalTransactionsEstimate,
+        badge: "Live activity",
+      },
+      {
+        label: "Bank Pool",
+        value: bankPoolBalance,
+        badge: "Top-up",
+        isBankPool: true,
+      },
+    ];
 
     return (
-        <div className="admin-root">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
+        
+        <div className="row g-3 mb-3">
+          {cards.map((c) => (
+            <div className="col-md-3 col-sm-6" key={c.label}>
+              <div
+                className="card border-0 shadow-sm h-100"
+                style={{
+                  borderRadius: 16,
+                  backgroundColor: "#ffffff",
+                  cursor: c.isBankPool ? "pointer" : "default",
+                }}
+                onClick={c.isBankPool ? () => setShowTopupModal(true) : undefined}
+              >
+                <div className="card-body py-3 px-3 d-flex flex-column justify-content-between">
+                  <div>
+                    <div className="text-muted small mb-1">{c.label}</div>
+                    <h5 className="fw-bold mb-1">
+                      {c.value?.toLocaleString("en-IN") || 0}
+                    </h5>
+                  </div>
+                  <span className="badge bg-light text-muted small">
+                    {c.badge}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
+       
+        <div className="row g-3">
+          <div className="col-lg-8">
+            <div
+              className="card border-0 shadow-sm h-100"
+              style={{ borderRadius: 16, backgroundColor: "#ffffff" }}
+            >
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h5 className="card-title mb-0">Recent Transactions</h5>
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setView("transactions")}
+                  >
+                    View all
+                  </button>
+                </div>
+                <p className="text-muted small mb-3">
+                  Snapshot of the latest activity in the system.
+                </p>
+                <div className="table-responsive">
+                  <table className="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr className="text-muted small">
+                        <th>Time</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.slice(0, 9).map((t) => {
+                        const isForeign = t.isForeign; 
+                        return (
+                          <tr key={t.id}>
+                            <td className="small">
+                              {t.timestamp}
+                            </td>
+                            <td className="small">{t.senderAccount}</td>
+                            <td className="small">{t.receiverAccount}</td>
+                            <td className="small fw-semibold">₹{t.amount}</td>
+                            <td className="small">
+                              <span className={getTypeBadgeClass(isForeign)}>
+                                {getTypeLabel(isForeign)}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {transactions.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan="5"
+                            className="text-center text-muted small"
+                          >
+                            No transactions loaded yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <div className="admin-body">
-                <AdminSidebar
-                    active={view}
-                    setActive={setView}
-                    onTransactions={fetchTransactions}
-                    onLoans={fetchPendingLoans}
-                    onUsers={fetchUsers}
-                    onAccounts={fetchAccounts}
-                    searchId={searchId}
-                    setSearchId={setSearchId}
-                    onSearchUser={() => searchUser()}
-                    onLogout={logout}
-                    isOpen={sidebarOpen}
-                />
-
-                <main
-                    className={`content ${!sidebarOpen ? "expanded" : ""}`}
-                    style={{ display: "flex", flexDirection: "column", gap: 20 }}
-                >
-                    {/* Global Alert */}
-                    <AnimatePresence>
-                        {alert && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                className={`alert ${alert.type === "success" ? "alert-success" : "alert-danger"
-                                    }`}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 10,
-                                    fontWeight: 600,
-                                }}
-                            >
-                                {alert.type === "success" ? (
-                                    <CheckCircle size={18} />
-                                ) : (
-                                    <AlertTriangle size={18} />
-                                )}
-                                {alert.message}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {/* Error State */}
-                    {error && !loading && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="admin-card"
-                            style={{
-                                background: "var(--danger-100)",
-                                borderColor: "var(--danger-200)",
-                                padding: 24,
-                            }}
-                        >
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                                <AlertTriangle
-                                    size={24}
-                                    style={{ color: "var(--danger-600)", flexShrink: 0 }}
-                                />
-                                <div style={{ flex: 1 }}>
-                                    <div
-                                        style={{
-                                            fontWeight: 700,
-                                            color: "var(--danger-900)",
-                                            marginBottom: 4,
-                                        }}
-                                    >
-                                        {error.context} Error
-                                    </div>
-                                    <div style={{ color: "var(--danger-700)", fontSize: "0.9375rem" }}>
-                                        {error.message}
-                                    </div>
-                                    <button
-                                        className="btn-ghost"
-                                        onClick={() => setError(null)}
-                                        style={{ marginTop: 12, padding: "6px 12px", fontSize: "0.875rem" }}
-                                    >
-                                        Dismiss
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Views */}
-                    {!loading && view === "home" && <StatTiles stats={stats} setView={setView} />}
-
-                    {!loading && view === "transactions" && (
-                        <TransactionsView
-                            data={transactions}
-                            paged={pagedTrans}
-                            totalFiltered={filteredTrans.length}
-                            query={transQuery}
-                            setQuery={setTransQuery}
-                            page={transPage}
-                            setPage={setTransPage}
-                            pageSize={PAGE_SIZE}
-                        />
-                    )}
-
-                    {!loading && view === "loans" && (
-                        <LoansView
-                            loans={loans}
-                            onRefresh={fetchPendingLoans}
-                            query={loanQuery}
-                            setQuery={setLoanQuery}
-                            page={loanPage}
-                            setPage={setLoanPage}
-                            pageSize={PAGE_SIZE}
-                            onApprove={approveLoan}
-                            popup={popup}
-                        />
-                    )}
-
-                    {!loading && view === "repayments" && <AdminRepaymentTable />}
-
-                    {!loading && view === "users" && (
-                        <UsersView
-                            users={users}
-                            filtered={filteredUsers}
-                            paged={pagedUsers}
-                            query={userQuery}
-                            setQuery={setUserQuery}
-                            page={userPage}
-                            setPage={setUserPage}
-                            pageSize={PAGE_SIZE}
-                            editForm={editForm}
-                            setEditForm={setEditForm}
-                            searchId={searchId}
-                            setSearchId={setSearchId}
-                            onSearchUser={searchUser}
-                            showAlert={showAlert}
-                        />
-                    )}
-
-                    {!loading && view === "accounts" && (
-                        <AccountsView
-                            accounts={accounts}
-                            filtered={filteredAccounts}
-                            paged={pagedAccounts}
-                            query={accQuery}
-                            setQuery={setAccQuery}
-                            page={accPage}
-                            setPage={setAccPage}
-                            pageSize={PAGE_SIZE}
-                            showAlert={showAlert}
-                            refresh={fetchAccounts}
-                        />
-                    )}
-
-                    {/* ✅ NEW VIEW */}
-                    {!loading && view === "bankfund" && (
-                        <BankFundView showAlert={showAlert} showPopup={showPopup} />
-                    )}
-                </main>
+          <div className="col-lg-4">
+            <div
+              className="card border-0 shadow-sm mb-3"
+              style={{ borderRadius: 16, backgroundColor: "#ffffff", height: 200 }}
+            >
+              <div className="card-body">
+                <h6 className="card-title mb-2">Loan Approval Progress</h6>
+                <p className="text-muted small mb-3">
+                  Pending loans cleared in this cycle.
+                </p>
+                <div className="progress" style={{ height: 8 }}>
+                  <div
+                    className="progress-bar bg-danger"
+                    role="progressbar"
+                    style={{ width: "75%" }}
+                  />
+                </div>
+                <div className="d-flex justify-content-between mt-2 small text-muted">
+                  <span>Completed</span>
+                  <span>75%</span>
+                </div>
+              </div>
             </div>
 
-            {/* Quick util styles */}
-            <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .loading-spinner {
-          border: 3px solid rgba(230,57,70,0.15);
-          border-top-color: #e63946;
-          border-radius: 50%;
-          animation: spin 0.9s linear infinite;
-        }
-      `}</style>
+            <div
+              className="card border-0 shadow-sm"
+              style={{
+                borderRadius: 16,
+                backgroundColor: "#ffffff",
+                height: 200,
+                marginTop: 10,
+              }}
+            >
+              <div className="card-body">
+                <h6 className="card-title mb-2">System Health</h6>
+                <ul className="list-unstyled small mb-0">
+                  <li className="d-flex justify-content-between mb-1">
+                    <span>API Latency</span>
+                    <span className="text-success fw-semibold">Normal</span>
+                  </li>
+                  <li className="d-flex justify-content-between mb-1">
+                    <span>Fraud Engine</span>
+                    <span className="text-success fw-semibold">Online</span>
+                  </li>
+                  <li className="d-flex justify-content-between">
+                    <span>Disbursement Queue</span>
+                    <span className="text-warning fw-semibold">Moderate</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
+      </motion.div>
     );
+  };
+
+  return (
+    <>
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#ffffffff",
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+        }}
+      >
+       
+        <motion.div
+          initial={false}
+          animate={{ x: sidebarOpen ? 0 : -SIDEBAR_WIDTH }}
+          transition={{ duration: 0.25, ease: "easeInOut" }}
+          style={{ position: "fixed", top: 0, left: 0, zIndex: 2000 }}
+        >
+          <AdminSidebar
+            active={view}
+            setActive={setView}
+            onTransactions={() => setView("transactions")}
+            onLoans={() => setView("loans")}
+            onUsers={() => setView("users")}
+            onAccounts={() => setView("accounts")}
+            searchId=""
+            setSearchId={() => {}}
+            onSearchUser={() => {}}
+            adminUser={adminUser}
+            onLogout={handleLogout}
+          />
+        </motion.div>
+
+       
+        <div
+          style={{
+            marginLeft: sidebarOpen ? SIDEBAR_WIDTH : 0,
+            transition: "margin-left 0.25s ease-in-out",
+          }}
+        >
+          <AdminHeader
+            sidebarOpen={sidebarOpen}
+            toggleSidebar={() => setSidebarOpen((o) => !o)}
+            onLogout={handleLogout}
+          />
+
+          <main
+            className="container-fluid"
+            style={{ paddingTop: 96, paddingBottom: 24 }}
+          >
+            {view === "home" && <HomeDashboard />}
+
+            {view === "transactions" && (
+              <TransactionsView
+                data={transactions}
+                load={loadTransactions}
+                page={transPage}
+                setPage={setTransPage}
+                totalPages={transTotalPages}
+              />
+            )}
+
+            {view === "users" && (
+              <UsersView
+                users={users}
+                load={loadUsers}
+                page={userPage}
+                setPage={setUserPage}
+                totalPages={userTotalPages}
+              />
+            )}
+
+            {view === "accounts" && (
+              <AccountsView
+                accounts={accounts}
+                load={loadAccounts}
+                page={accPage}
+                setPage={setAccPage}
+                totalPages={accTotalPages}
+              />
+            )}
+
+            {view === "loans" && (
+              <LoansView
+                loans={loans}
+                load={loadLoans}
+                page={loanPage}
+                setPage={setLoanPage}
+                totalPages={loanTotalPages}
+              />
+            )}
+
+            {view === "repayments" && (
+              <AdminRepaymentTable
+                repayments={repayments}
+                load={loadRepayments}
+                page={repayPage}
+                setPage={setRepayPage}
+                totalPages={repayTotalPages}
+              />
+            )}
+          </main>
+        </div>
+      </div>
+
+      
+      {showTopupModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 5000,
+            padding: "2rem",
+          }}
+          onClick={() => setShowTopupModal(false)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: 12,
+              width: "100%",
+              maxWidth: 400,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-bottom">
+              <h5 className="mb-1">Bank Pool Top-up</h5>
+              <p className="text-muted small mb-0">
+                Current: ₹{bankPoolBalance?.toLocaleString("en-IN") || 0}
+              </p>
+            </div>
+            <div className="p-4">
+              <div className="mb-3">
+                <label className="form-label small">Amount (₹)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Enter amount"
+                  value={topupAmount}
+                  onChange={(e) => setTopupAmount(e.target.value)}
+                  min="0"
+                />
+              </div>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-outline-secondary flex-grow-1"
+                  onClick={() => setShowTopupModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary flex-grow-1"
+                  onClick={handleTopup}
+                  disabled={!topupAmount || parseFloat(topupAmount) <= 0}
+                >
+                  Add Funds
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

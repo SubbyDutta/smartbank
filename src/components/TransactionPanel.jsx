@@ -1,8 +1,43 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import LoadingInline from "./LoadingInLine";
 import { motion } from "framer-motion";
 
+const PAGE_SIZE = 20;
+const VISIBLE_ROWS = 4;
+
 export default function TransactionsPanel({ transactions, loading, onReload }) {
+  const [page, setPage] = useState(0);
+  const [lastFetchedCount, setLastFetchedCount] = useState(0);
+
+  
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
+
+  
+  useEffect(() => {
+    if (onReload) {
+      onReload({
+        page,
+        size: PAGE_SIZE,
+        from: from || undefined,
+        to: to || undefined,
+        minAmount: minAmount || undefined,
+        maxAmount: maxAmount || undefined,
+      });
+    }
+  }, [page]);
+
+  
+  useEffect(() => {
+    setLastFetchedCount(transactions?.length || 0);
+  }, [transactions]);
+
+  const hasPrev = page > 0;
+  const hasNext = lastFetchedCount === PAGE_SIZE;
+
+  
   const rowVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: (i) => ({
@@ -25,7 +60,52 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
     boxShadow: "0 10px 30px rgba(0,0,0,0.07)",
     position: "relative",
     overflow: "hidden",
-    top: -30,
+     top: 10,
+    position: "fixed",
+    height:700,
+  };
+
+  const handleReloadClick = () => {
+    if (onReload) {
+      setPage(0);
+      onReload({
+        page: 0,
+        size: PAGE_SIZE,
+        from: from || undefined,
+        to: to || undefined,
+        minAmount: minAmount || undefined,
+        maxAmount: maxAmount || undefined,
+      });
+    }
+  };
+
+  const applyFilters = () => {
+    setPage(0);
+    onReload({
+      page: 0,
+      size: 20,
+      from: from || undefined,
+      to: to || undefined,
+      minAmount: minAmount || undefined,
+      maxAmount: maxAmount || undefined,
+    });
+  };
+
+  const showAll = () => {
+    setFrom("");
+    setTo("");
+    setMinAmount("");
+    setMaxAmount("");
+    setPage(0);
+    onReload({ page: 0, size: PAGE_SIZE });
+  };
+
+  const handlePrev = () => {
+    if (hasPrev && !loading) setPage((p) => p - 1);
+  };
+
+  const handleNext = () => {
+    if (hasNext && !loading) setPage((p) => p + 1);
   };
 
   return (
@@ -36,19 +116,84 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Top Accent Border */}
+      
       <div
+        className="mb-4 p-3"
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 4,
-        
+          borderRadius: 16,
+          background: "rgba(230,57,70,0.05)",
+          border: "1px solid rgba(230,57,70,0.15)",
         }}
-      />
+      >
+        <div className="d-flex flex-wrap gap-3">
 
-      {/* Header */}
+          <input
+            type="date"
+            className="form-control"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            style={{ maxWidth: 180 }}
+          />
+
+          <input
+            type="date"
+            className="form-control"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            style={{ maxWidth: 180 }}
+          />
+
+          <input
+            type="number"
+            className="form-control"
+            placeholder="Min ₹"
+            value={minAmount}
+            onChange={(e) => setMinAmount(e.target.value)}
+            style={{ maxWidth: 120 }}
+          />
+
+          <input
+            type="number"
+            className="form-control"
+            placeholder="Max ₹"
+            value={maxAmount}
+            onChange={(e) => setMaxAmount(e.target.value)}
+            style={{ maxWidth: 120 }}
+          />
+
+         
+          <motion.button
+            className="btn text-white fw-bold"
+            style={{
+              background: "linear-gradient(135deg, #ff4d6d, #e63946)",
+              borderRadius: 12,
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={applyFilters}
+          >
+            <i className="bi bi-search me-1"></i>
+            Filter
+          </motion.button>
+
+         
+          <motion.button
+            className="btn fw-bold"
+            style={{
+              background: "#fff",
+              borderRadius: 12,
+              border: "1px solid rgba(230,57,70,0.25)",
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={showAll}
+          >
+            Show All
+          </motion.button>
+        </div>
+      </div>
+
+      
       <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light">
         <div className="d-flex align-items-center gap-3">
           <div
@@ -87,7 +232,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
 
         <motion.button
           className="btn fw-bold text-white border-0 px-4 py-2"
-          onClick={onReload}
+          onClick={handleReloadClick}
           style={{
             borderRadius: 12,
             fontSize: "0.9rem",
@@ -97,34 +242,33 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
           variants={buttonVariants}
           whileHover="hover"
           whileTap="tap"
+          disabled={loading}
         >
           <i className="bi bi-arrow-clockwise me-2"></i>
-          Reload
+          {loading ? "Reloading..." : "Reload"}
         </motion.button>
       </div>
 
-      {/* Main Table */}
+     
       {loading ? (
         <div className="text-center py-5">
           <LoadingInline text="Loading transactions..." />
         </div>
       ) : transactions && transactions.length ? (
-        <div
-          style={{
-            maxHeight: 550,
-            overflowY: "auto",
-            borderRadius: 16,
-            border: "1px solid rgba(230,57,70,0.1)",
-            background: "#fff",
-            boxShadow: "inset 0 2px 6px rgba(0,0,0,0.03)",
-          }}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-            }}
-          >
+       <div
+  style={{
+    maxHeight: VISIBLE_ROWS * 60 + 60,
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    display: 'block',
+    borderRadius: 16,
+    border: '1px solid rgba(230,57,70,0.1)',
+    background: '#fff',
+    boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.03)',
+  }}
+>
+
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr
                 style={{
@@ -143,15 +287,16 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                 ].map((h) => (
                   <th
                     key={h.label}
-                    style={{
-                      padding: "14px 16px",
-                      fontWeight: 600,
-                      textAlign: "left",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 5,
-                      letterSpacing: "0.4px",
-                    }}
+                  style={{
+                    padding: '14px 16px',
+                    fontWeight: 600,
+                    textAlign: 'left',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 5,
+                    letterSpacing: '0.4px',
+                    background: 'linear-gradient(135deg, #ff4d6d, #e63946)',
+                  }}
                   >
                     <i className={`bi ${h.icon} me-1`}></i>
                     {h.label}
@@ -159,6 +304,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                 ))}
               </tr>
             </thead>
+
             <tbody>
               {transactions.map((t, i) => (
                 <motion.tr
@@ -171,17 +317,19 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                     background: "rgba(255,77,109,0.05)",
                     transition: { duration: 0.2 },
                   }}
-                  style={{
-                    borderBottom: "1px solid rgba(0,0,0,0.04)",
-                  }}
+                  style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}
                 >
+                 
                   <td style={{ padding: "12px 16px", fontSize: "0.9rem" }}>
                     <div className="d-flex align-items-center gap-2 text-dark">
                       <i className="bi bi-calendar3 text-muted"></i>
-                      {t.timestamp ? new Date(t.timestamp).toLocaleString() : "—"}
+                      {t.timestamp
+                        ? new Date(t.timestamp).toLocaleString()
+                        : "—"}
                     </div>
                   </td>
 
+                  
                   <td style={{ padding: "12px 16px" }}>
                     <div className="d-flex align-items-center gap-2">
                       <span
@@ -189,7 +337,8 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                           width: 32,
                           height: 32,
                           borderRadius: 8,
-                          background: "linear-gradient(135deg, #ff4d6d, #e63946)",
+                          background:
+                            "linear-gradient(135deg, #ff4d6d, #e63946)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -206,6 +355,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                     </div>
                   </td>
 
+                 
                   <td style={{ padding: "12px 16px" }}>
                     <div className="d-flex align-items-center gap-2">
                       <span
@@ -213,7 +363,8 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                           width: 32,
                           height: 32,
                           borderRadius: 8,
-                          background: "linear-gradient(135deg, #10b981, #059669)",
+                          background:
+                            "linear-gradient(135deg, #10b981, #059669)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -230,6 +381,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                     </div>
                   </td>
 
+                  {/* AMOUNT */}
                   <td style={{ padding: "12px 16px", fontWeight: 600 }}>
                     <span
                       style={{
@@ -248,6 +400,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                     </span>
                   </td>
 
+                  {/* TYPE */}
                   <td style={{ padding: "12px 16px" }}>
                     <span
                       style={{
@@ -264,7 +417,11 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                         color: t.isForeign ? "#3b82f6" : "#10b981",
                       }}
                     >
-                      <i className={`bi ${t.isForeign ? "bi-globe" : "bi-house-fill"}`}></i>
+                      <i
+                        className={`bi ${
+                          t.isForeign ? "bi-globe" : "bi-house-fill"
+                        }`}
+                      ></i>
                       {t.isForeign ? "Foreign" : "Domestic"}
                     </span>
                   </td>
@@ -307,21 +464,65 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
         </motion.div>
       )}
 
-      {/* Footer Summary */}
+     
       {transactions && transactions.length > 0 && (
         <motion.div
           className="mt-4 pt-3 border-top border-light text-muted small"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { delay: 0.3 } }}
         >
-          <div className="d-flex align-items-center gap-3">
-            <i className="bi bi-info-circle-fill text-danger"></i>
-            <span>
-              Total Records: <strong>{transactions.length}</strong>
-            </span>
-            <span className="mx-2">•</span>
-            <i className="bi bi-shield-check-fill text-success"></i>
-            <span>All transactions verified</span>
+          <div className="d-flex flex-wrap align-items-center gap-3 justify-content-between">
+            <div className="d-flex align-items-center gap-3">
+              <i className="bi bi-info-circle-fill text-danger"></i>
+              <span>
+                Total Records on this page:{" "}
+                <strong>{transactions.length}</strong>
+              </span>
+              <span className="mx-2">•</span>
+              <i className="bi bi-shield-check-fill text-success"></i>
+              <span>All transactions verified</span>
+            </div>
+
+            <div className="d-flex align-items-center gap-2">
+              <span>
+                Page <strong>{page + 1}</strong>
+              </span>
+
+              {/* Prev */}
+              <motion.button
+                className="btn btn-sm px-3 py-1 text-white border-0"
+                style={{
+                  borderRadius: 999,
+                  background: "linear-gradient(135deg, #ff4d6d, #e63946)",
+                  opacity: hasPrev ? 1 : 0.5,
+                }}
+                variants={buttonVariants}
+                whileHover={hasPrev ? "hover" : undefined}
+                whileTap={hasPrev ? "tap" : undefined}
+                onClick={handlePrev}
+                disabled={!hasPrev}
+              >
+                <i className="bi bi-chevron-left me-1"></i>
+                Prev
+              </motion.button>
+
+              
+              <motion.button
+                className="btn btn-sm px-3 py-1 text-white border-0"
+                style={{
+                  borderRadius: 999,
+                  background: "linear-gradient(135deg, #ff4d6d, #e63946)",
+                  opacity: hasNext ? 1 : 0.5,
+                }}
+                variants={buttonVariants}
+                whileHover={hasNext ? "hover" : undefined}
+                whileTap={hasNext ? "tap" : undefined}
+                onClick={handleNext}
+                disabled={!hasNext}
+              >
+                Next <i className="bi bi-chevron-right ms-1"></i>
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       )}
