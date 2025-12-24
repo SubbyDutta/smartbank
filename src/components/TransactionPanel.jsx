@@ -283,7 +283,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                   { label: "From", icon: "bi-person-fill" },
                   { label: "To", icon: "bi-person-plus-fill" },
                   { label: "Amount", icon: "bi-currency-rupee" },
-                  { label: "Type", icon: "bi-globe" },
+                
                 ].map((h) => (
                   <th
                     key={h.label}
@@ -338,7 +338,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                           height: 32,
                           borderRadius: 8,
                           background:
-                            "linear-gradient(135deg, #ff4d6d, #e63946)",
+                            "linear-gradient(135deg, #ff4d6d, #ff4d6d)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -400,31 +400,7 @@ export default function TransactionsPanel({ transactions, loading, onReload }) {
                     </span>
                   </td>
 
-                  {/* TYPE */}
-                  <td style={{ padding: "12px 16px" }}>
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "6px 12px",
-                        borderRadius: 20,
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        background: t.isForeign
-                          ? "rgba(59,130,246,0.1)"
-                          : "rgba(16,185,129,0.1)",
-                        color: t.isForeign ? "#3b82f6" : "#10b981",
-                      }}
-                    >
-                      <i
-                        className={`bi ${
-                          t.isForeign ? "bi-globe" : "bi-house-fill"
-                        }`}
-                      ></i>
-                      {t.isForeign ? "Foreign" : "Domestic"}
-                    </span>
-                  </td>
+                 
                 </motion.tr>
               ))}
             </tbody>

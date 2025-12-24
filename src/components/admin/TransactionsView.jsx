@@ -23,8 +23,8 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
   }, [query, data]);
 
   const formatFraudFlag = (val) => {
-    if (val === true || val === "true" || val === 1) return "Yes";
-    if (val === false || val === "false" || val === 0) return "No";
+    if (val === 1 || val === "1" || val === true) return "Yes";
+    if (val === 0 || val === "0" || val === false) return "No";
     if (val === undefined || val === null) return "—";
     return String(val);
   };
@@ -37,24 +37,46 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
   };
 
   const isFraudTransaction = (t) => {
-    const fraudFlag = t.isFraud ?? t.fraud;
-    const fraudProb = Number(t.fraudProbability ?? t.probability ?? 0);
-    return (
-      fraudFlag === true ||
-      fraudFlag === 1 ||
-      fraudFlag === "true" ||
-      fraudProb > 0.9
-    );
+    return t.isFraud === 1 || Number(t.fraudProbability ?? 0) > 0.9;
   };
 
-  const getFraudRowStyle = (t) => {
+  const isLateHour = (hour) => {
+    const h = Number(hour);
+    return h >= 22 || h <= 5; // 10 PM to 4 AM
+  };
+
+  const isForeignTransaction = (t) => {
+    return t.isForeign === 1;
+  };
+
+  const getRowStyle = (t) => {
+    const styles = { transition: "all 0.2s ease" };
+    
     if (isFraudTransaction(t)) {
       return {
+        ...styles,
         backgroundColor: "#fef2f2",
         borderLeft: "4px solid #dc2626"
       };
     }
-    return {};
+    
+    if (isLateHour(t.hour)) {
+      return {
+        ...styles,
+        backgroundColor: "#fffbeb",
+        borderLeft: "4px solid #f59e0b"
+      };
+    }
+    
+    if (isForeignTransaction(t)) {
+      return {
+        ...styles,
+        backgroundColor: "#f0f9ff",
+        borderLeft: "4px solid #3b82f6"
+      };
+    }
+    
+    return styles;
   };
 
   const getFraudBadgeStyle = (isFraud) => {
@@ -76,16 +98,15 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
     };
   };
 
-  
   const getTypeBadgeStyle = (isForeign) => {
     if (isForeign) {
       return {
-        backgroundColor: "#fff3cd",
-        color: "#854d0e",
+        backgroundColor: "#dbeafe",
+        color: "#1e40af",
         fontWeight: "600",
         borderRadius: "999px",
         padding: "0.25rem 0.75rem",
-        border: "1px solid #ffeaa7"
+        border: "1px solid #93c5fd"
       };
     }
     return {
@@ -98,8 +119,36 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
     };
   };
 
+  const getHourBadgeStyle = (hour) => {
+    if (isLateHour(hour)) {
+      return {
+        backgroundColor: "#fef3c7",
+        color: "#92400e",
+        fontWeight: "600",
+        borderRadius: "999px",
+        padding: "0.25rem 0.75rem",
+        border: "1px solid #fed7aa"
+      };
+    }
+    return {
+      backgroundColor: "#f3f4f6",
+      color: "#374151",
+      fontWeight: "500",
+      borderRadius: "999px",
+      padding: "0.25rem 0.75rem"
+    };
+  };
+
   const getTypeLabel = (value) => {
-    return value === 0 ? "Domestic" : "Foreign";
+    return value === 1 ? "Foreign" : "Domestic";
+  };
+
+  const getHourLabel = (hour) => {
+    const h = Number(hour);
+    if (isLateHour(hour)) {
+      return `${h % 24}:00 (Late Night)`;
+    }
+    return `${h % 24}:00`;
   };
 
   return (
@@ -116,7 +165,7 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
             Transactions
           </h4>
           <div className="text-muted small">
-            Review all transactions, including fraud predictions.
+            Review all transactions with fraud, foreign & late-night alerts.
           </div>
         </div>
         <input
@@ -160,6 +209,7 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
                 <th>From Account</th>
                 <th>To Account</th>
                 <th>Amount</th>
+                <th>Hour</th>
                 <th>Type</th>
                 <th>Is Fraud</th>
                 <th>Fraud Probability</th>
@@ -168,7 +218,7 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center text-muted py-4">
+                  <td colSpan={8} className="text-center text-muted py-4">
                     No transactions found.
                   </td>
                 </tr>
@@ -176,32 +226,43 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
 
               {filtered.map((t) => {
                 const isFraud = isFraudTransaction(t);
-
-                
-                const isForeignValue = t.isFraud;
-                const isForeign = isForeignValue !== 0;
+                const isForeign = isForeignTransaction(t);
+                const isLate = isLateHour(t.hour);
 
                 return (
                   <tr
                     key={t.id}
-                    style={getFraudRowStyle(t)}
-                    className={isFraud ? "table-danger" : ""}
+                    style={getRowStyle(t)}
+                    className={
+                      isFraud 
+                        ? "table-danger" 
+                        : isLate 
+                        ? "table-warning" 
+                        : isForeign 
+                        ? "table-info" 
+                        : ""
+                    }
                   >
                     <td className="small text-muted">{t.timestamp}</td>
                     <td className="small fw-semibold">{t.senderAccount}</td>
                     <td className="small fw-semibold">{t.receiverAccount}</td>
                     <td className="small fw-semibold">₹{t.amount}</td>
 
-                   
+                    <td className="small">
+                      <span style={getHourBadgeStyle(t.hour)}>
+                        {getHourLabel(t.hour)}
+                      </span>
+                    </td>
+
                     <td className="small">
                       <span style={getTypeBadgeStyle(isForeign)}>
-                        {getTypeLabel(isForeignValue)}
+                        {getTypeLabel(t.isForeign)}
                       </span>
                     </td>
 
                     <td className="small">
                       <span style={getFraudBadgeStyle(isFraud)}>
-                        {formatFraudFlag(t.isFraud ?? t.fraud)}
+                        {formatFraudFlag(t.isFraud)}
                       </span>
                     </td>
 
@@ -212,7 +273,7 @@ export default function TransactionsView({ data, load, page, setPage, totalPages
                           fontWeight: isFraud ? "600" : "500",
                         }}
                       >
-                        {formatProb(t.fraudProbability ?? t.probability)}
+                        {formatProb(t.fraudProbability)}
                       </span>
                     </td>
                   </tr>

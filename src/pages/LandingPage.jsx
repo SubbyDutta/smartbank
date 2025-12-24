@@ -377,25 +377,7 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <Section className="cta-section">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2><GradientText>Ready to Get Started?</GradientText></h2>
-          <p>Open your free account today and experience the future of digital banking</p>
-
-          <motion.button
-            className="btn-gradient btn-large"
-            onClick={handleCreateAccount}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {user ? "Go to Dashboard" : "Create Free Account"} <ArrowRight size={22} />
-          </motion.button>
-
-          <p className="cta-note">No credit card required • Free forever • Cancel anytime</p>
-        </motion.div>
+       
       </Section>
 
       {/* Footer */}

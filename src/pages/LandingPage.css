@@ -361,6 +361,7 @@
 .benefits-section {
   background: linear-gradient(135deg, #ff6b81 0%, #e63946 100%);
   color: #fff;
+  border-radius: 10px;
 }
 
 .benefits-grid {
