@@ -64,22 +64,18 @@ export default function ChatbotPanel() {
     tap: { scale: 0.95 },
   };
 
-  const panelStyle = {
-    width: "100%",
-    maxWidth: 1000,
-    borderRadius: 24,
-    background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
-    margin: "0 auto",
-    overflow: "hidden",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
-    height:700,
-    top:-30
-  };
-
   return (
     <motion.div
       className="card border-0 shadow-lg p-4 p-md-5"
-      style={panelStyle}
+      style={{
+        width: "100%",
+        borderRadius: 24,
+        background: "#fff",
+        overflow: "auto",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        border: '1px solid rgba(0, 0, 0, 0.06)',
+        minHeight: 500,
+      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -166,29 +162,33 @@ export default function ChatbotPanel() {
                   flex: 1,
                   overflowY: "auto",
                   padding: "20px",
-                  background: "#f8f9fa",
+                  background: "linear-gradient(180deg, #fafafa 0%, #ffffff 100%)",
                 }}
               >
                 {messages.length === 0 ? (
                   <div className="text-center py-5">
-                    <div
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
                       style={{
-                        width: 80,
-                        height: 80,
+                        width: 100,
+                        height: 100,
                         margin: "0 auto 1.5rem",
                         borderRadius: "50%",
-                        background: "rgba(230,57,70,0.1)",
+                        background: "linear-gradient(135deg, rgba(230,57,70,0.1) 0%, rgba(255,107,129,0.1) 100%)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 36,
+                        fontSize: 44,
                         color: "#e63946",
+                        border: '3px solid rgba(230,57,70,0.2)',
                       }}
                     >
-                      <i className="bi bi-chat-dots"></i>
-                    </div>
-                    <h5 className="text-muted fw-bold mb-2">Start a Conversation</h5>
-                    <p className="text-muted small mb-0">
+                      <i className="bi bi-robot"></i>
+                    </motion.div>
+                    <h5 className="fw-bold mb-2" style={{ color: '#111827' }}>Start a Conversation</h5>
+                    <p className="text-muted mb-0" style={{ fontSize: '0.9375rem' }}>
                       Ask me anything about your account, balance or recent activity.
                     </p>
                   </div>
@@ -206,29 +206,69 @@ export default function ChatbotPanel() {
                           display: "flex",
                           justifyContent:
                             m.role === "user" ? "flex-end" : "flex-start",
+                          alignItems: 'flex-start',
+                          gap: 8,
                         }}
                       >
+                        {m.role === "bot" && (
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #e63946 0%, #ff6b81 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#fff',
+                              fontSize: 14,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <i className="bi bi-robot"></i>
+                          </div>
+                        )}
                         <div
                           style={{
                             maxWidth: "70%",
-                            padding: "12px 16px",
-                            borderRadius: 16,
+                            padding: "14px 18px",
+                            borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                             background:
                               m.role === "user"
-                                ? "linear-gradient(135deg, #ff6b81 0%, #e63946 100%)"
+                                ? "linear-gradient(135deg, #e63946 0%, #ff6b81 100%)"
                                 : "#ffffff",
-                            color: m.role === "user" ? "#fff" : "#212529",
+                            color: m.role === "user" ? "#fff" : "#1f2937",
                             boxShadow:
                               m.role === "user"
                                 ? "0 4px 12px rgba(230,57,70,0.25)"
-                                : "0 2px 8px rgba(0,0,0,0.1)",
-                            fontSize: "0.95rem",
-                            lineHeight: 1.5,
+                                : "0 2px 12px rgba(0,0,0,0.08)",
+                            fontSize: "0.9375rem",
+                            lineHeight: 1.6,
                             whiteSpace: "pre-wrap",
+                            border: m.role === "bot" ? '1px solid #f3f4f6' : 'none',
                           }}
                         >
                           {m.text}
                         </div>
+                        {m.role === "user" && (
+                          <div
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              background: 'rgba(230,57,70,0.1)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#e63946',
+                              fontSize: 14,
+                              fontWeight: 600,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <i className="bi bi-person-fill"></i>
+                          </div>
+                        )}
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -237,17 +277,44 @@ export default function ChatbotPanel() {
                 {loading && (
                   <motion.div
                     className="d-flex align-items-center gap-2 mb-3"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     style={{
-                      padding: "12px 16px",
-                      background: "#ffffff",
-                      borderRadius: 16,
-                      maxWidth: "70%",
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 8,
                     }}
                   >
-                    <span className="spinner-border spinner-border-sm text-danger"></span>
-                    <span className="text-muted small">AI is thinking...</span>
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #e63946 0%, #ff6b81 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        fontSize: 14,
+                      }}
+                    >
+                      <i className="bi bi-robot"></i>
+                    </div>
+                    <div
+                      style={{
+                        padding: "14px 18px",
+                        background: "#ffffff",
+                        borderRadius: "18px 18px 18px 4px",
+                        maxWidth: "70%",
+                        boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                        border: '1px solid #f3f4f6',
+                      }}
+                    >
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="spinner-border spinner-border-sm text-danger" style={{ width: 16, height: 16 }}></div>
+                        <span style={{ fontSize: '0.9375rem', color: '#6b7280' }}>AI is thinking...</span>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
 

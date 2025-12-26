@@ -73,24 +73,20 @@ export default function TransferPanel({ onComplete }) {
     }
   };
 
-  const panelStyle = {
-    width: "100%",
-    maxWidth: 800,
-    borderRadius: 24,
-    background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
-    position: "relative",
-     top:-30,
-    overflow: "hidden",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
-  };
-
   return (
     <motion.div
       className="card border-0 shadow-lg p-4 p-md-5"
-      style={panelStyle}
+      style={{
+        width: "100%",
+        borderRadius: 24,
+        background: "#fff",
+        overflow: "visible",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        border: '1px solid rgba(0, 0, 0, 0.06)',
+      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
      
       <div

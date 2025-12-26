@@ -105,15 +105,11 @@ export default function AddMoney({ onSuccess }) {
   };
 
   const panelStyle = {
-    width: 800,
-   
-    borderRadius: 24,
+    width: "100%",
+    borderRadius: 20,
     background: "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
-    position: "relative",
-    overflow: "hidden",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
-      top: 10,
-    position: "fixed",
+    overflow: "visible",
+    boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
   };
 
   return (

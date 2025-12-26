@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function Sidebar({ user, active, setActive, logout, hasAccount }) {
+export default function Sidebar({ user, active, setActive, logout, hasAccount, isOpen, onClose }) {
   const navItems = [
     { key: 'dashboard', label: 'Dashboard', icon: 'bi-house-door-fill' },
     { key: 'transfer', label: 'Transfer Money', icon: 'bi-arrow-left-right' },
@@ -36,16 +36,16 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount })
     position: 'fixed',
     top: 0,
     left: 0,
-    background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02)',
-    
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    zIndex: 100,
+    background: 'linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%)',
+    boxShadow: '2px 0 16px rgba(0,0,0,0.06)',
+    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    zIndex: 1000,
+    borderRight: '1px solid rgba(230,57,70,0.08)',
   };
 
   return (
     <motion.aside
-      className='up-sidebar'
+      className={`up-sidebar ${isOpen ? 'sidebar-open' : ''}`}
       style={sidebarStyle}
       initial='hidden'
       animate='visible'
@@ -134,7 +134,7 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount })
                 fontSize: 14,
                 border: 'none',
                 cursor: hasAccount ? 'pointer' : 'not-allowed',
-                opacity: hasAccount ? 1 : 0.5,
+                opacity: hasAccount ? 1 : 0.4,
                 transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',

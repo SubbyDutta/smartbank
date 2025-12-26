@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState(null); // { type: "success" | "error", text }
+  const [message, setMessage] = useState(null); 
   const navigate = useNavigate();
 
   useEffect(() => {

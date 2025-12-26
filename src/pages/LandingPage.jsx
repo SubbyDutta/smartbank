@@ -40,9 +40,9 @@ const benefits = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null); // { username }
+  const [user, setUser] = useState(null); 
 
-  // Just read token if present, do NOT redirect
+ 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -101,7 +101,7 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-      {/* Navigation */}
+     
       <motion.nav
         className="landing-nav"
         initial={{ y: -100, opacity: 0 }}
@@ -116,7 +116,7 @@ export default function LandingPage() {
         <div className="nav-actions">
           {!user ? (
             <>
-              {/* ORIGINAL: Login + Get Started */}
+              
               <motion.button
                 className="btn-outline"
                 onClick={() => navigate("/login")}
@@ -136,7 +136,7 @@ export default function LandingPage() {
             </>
           ) : (
             <>
-              {/* Username in same style as Login - redirects to /user or /admin */}
+             
               <motion.button
                 className="btn-outline"
                 onClick={handleUserAction}
@@ -145,7 +145,7 @@ export default function LandingPage() {
               >
                 {user.username}
               </motion.button>
-              {/* Logout button (styled like Get Started) */}
+             
               <motion.button
                 className="btn-gradient"
                 onClick={handleLogout}
@@ -159,7 +159,7 @@ export default function LandingPage() {
         </div>
       </motion.nav>
 
-      {/* Hero Section */}
+      
       <Section className="hero-section">
         <div className="hero-grid">
           <motion.div
@@ -284,7 +284,7 @@ export default function LandingPage() {
         </div>
       </Section>
 
-      {/* Stats Section */}
+      
       <Section className="stats-section">
         <div className="stats-grid">
           {stats.map((stat, i) => (
@@ -305,7 +305,7 @@ export default function LandingPage() {
         </div>
       </Section>
 
-      {/* Features Section */}
+     
       <Section>
         <motion.div
           className="section-header"
@@ -339,7 +339,7 @@ export default function LandingPage() {
         </div>
       </Section>
 
-      {/* Benefits Section */}
+     
       <Section className="benefits-section">
         <div className="benefits-grid">
           <motion.div
@@ -380,7 +380,6 @@ export default function LandingPage() {
        
       </Section>
 
-      {/* Footer */}
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-brand">

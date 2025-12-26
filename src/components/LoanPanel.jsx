@@ -112,30 +112,20 @@ export default function Loan() {
 
   return (
     <>
-      {/* Page background to match dashboard */}
-      <div
-        className="min-vh-100"
+      <motion.div
+        className="card border-0 shadow-lg p-4 p-md-5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
         style={{
-          background: "#f5f7fb",
-          padding: "24px",
+          width: "100%",
+          borderRadius: 24,
+          background: "#fff",
+          overflow: "auto",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          border: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mx-auto"
-          style={{ maxWidth: 1120 }}
-        >
-          {/* Main loan card (center column style) */}
-          <div
-            className="shadow-sm"
-            style={{
-              borderRadius: 28,
-              background: "#ffffff",
-              padding: "28px 32px 32px",
-            }}
-          >
             {/* Header */}
             <div className="d-flex flex-column align-items-center mb-4">
               <div
@@ -515,9 +505,7 @@ export default function Loan() {
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
+      </motion.div>
 
       {/* Success overlay */}
       <AnimatePresence>

@@ -9,7 +9,6 @@ import TransferPanel from '../components/TransferPanel';
 import TransactionsPanel from '../components/TransactionPanel';
 import ChatbotPanel from '../components/ChatbotPanel';
 import LoanPanel from '../components/LoanPanel';
-import RightPanel from '../components/RightPanel';
 import AddMoney from '../components/AddMoney';
 import LoanRepaymentPanel from '../components/MyLoans';
 import { formatCurrencyINR } from '../utils/format';
@@ -20,6 +19,7 @@ export default function UserPage() {
   const [user, setUser] = useState({ username: 'User', role: '' });
   const [active, setActive] = useState('dashboard');
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [hasAccount, setHasAccount] = useState(true);
   const [accountNumber, setAccountNumber] = useState('');
@@ -41,24 +41,15 @@ export default function UserPage() {
       if (!token) return navigate('/login');
 
       const payload = jwtDecode(token);
-      const usernameFromToken =
-        payload?.sub ||
-        payload?.username ||
-        payload?.user ||
-        payload?.name ||
-        'User';
+      const usernameFromToken = payload?.sub || payload?.username || payload?.user || payload?.name || 'User';
 
-      setUser({
-        username: usernameFromToken,
-        role: payload?.role || '',
-      });
-
+      setUser({ username: usernameFromToken, role: payload?.role || '' });
       checkAccountAndLoad(usernameFromToken);
     } catch (err) {
       localStorage.removeItem('token');
       navigate('/login');
     }
-  }, []);
+  }, [navigate]);
 
   const balance = formatCurrencyINR(balanceRaw);
 
@@ -66,16 +57,13 @@ export default function UserPage() {
     setLoading(true);
     try {
       const res = await API.get('/user/me/account');
-      const acct =
-        res.data?.accountNumber ??
-        res.data?.account_number ??
-        (typeof res.data === 'string' ? res.data : null);
+      const acct = res.data?.accountNumber ?? res.data?.account_number ?? (typeof res.data === 'string' ? res.data : null);
 
       if (acct) {
         setHasAccount(true);
         setAccountNumber(acct);
         await fetchBalance();
-        await fetchTransactions({ username, page: 0, size: 3 });
+        await fetchTransactions({ username, page: 0, size: 20 });
       } else {
         setHasAccount(false);
         setAccountNumber('');
@@ -86,7 +74,6 @@ export default function UserPage() {
         setHasAccount(false);
         setAccountNumber('');
         setActive('createAccount');
-        return;
       } else {
         console.error('Error checking account:', err);
       }
@@ -96,16 +83,19 @@ export default function UserPage() {
   }
 
   async function fetchBalance() {
-    setLoading(true);
     try {
       const res = await API.get('/user/balance');
       const raw = res.data;
       const match = String(raw).match(/₹\s?([0-9,.]+)/);
-      if (match) setBalanceRaw(parseFloat(match[1].replace(/,/g, "")));
-      else if (typeof raw === "number") setBalanceRaw(raw);
-      else if (raw?.balance != null) setBalanceRaw(raw.balance);
-    } finally {
-      setLoading(false);
+      if (match) {
+        setBalanceRaw(parseFloat(match[1].replace(/,/g, '')));
+      } else if (typeof raw === 'number') {
+        setBalanceRaw(raw);
+      } else if (raw?.balance != null) {
+        setBalanceRaw(raw.balance);
+      }
+    } catch (err) {
+      console.error('Error fetching balance:', err);
     }
   }
 
@@ -113,7 +103,7 @@ export default function UserPage() {
     const {
       username = user.username,
       page = 0,
-      size = 3,
+      size = 20,
       from,
       to,
       minAmount,
@@ -145,6 +135,8 @@ export default function UserPage() {
 
       const list = res.data?.content || [];
       setTransactions(list);
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
     } finally {
       setTxLoading(false);
     }
@@ -158,6 +150,7 @@ export default function UserPage() {
   const guardedSetActive = (view) => {
     const requiresAccount = [
       'dashboard',
+      'balance',
       'transfer',
       'tx',
       'addMoney',
@@ -172,14 +165,13 @@ export default function UserPage() {
   };
 
   const handleAdharChange = (e) => {
-    let value = e.target.value.replace(/\D/g, "");
+    let value = e.target.value.replace(/\D/g, '');
     if (value.length > 12) value = value.slice(0, 12);
     setFormAdhar(value);
   };
 
   const handlePanChange = (e) => {
-    let value = e.target.value.toUpperCase();
-    value = value.replace(/[^A-Z0-9]/g, "").slice(0, 10);
+    let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
     setFormPAN(value);
   };
 
@@ -223,40 +215,54 @@ export default function UserPage() {
 
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-
       await checkAccountAndLoad(user.username);
       setActive('dashboard');
     } catch (err) {
-      const msg =
-        err?.response?.data?.error ||
-        err?.response?.data ||
-        'Failed to create account. Please try again.';
+      const msg = err?.response?.data?.error || err?.response?.data || 'Failed to create account. Please try again.';
       setCreateError(String(msg));
     } finally {
       setCreatingAccount(false);
     }
   };
 
+
   return (
     <div className="up-root">
+      <button
+        className="mobile-hamburger"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        <i className={`bi ${sidebarOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
+      </button>
+
+      {sidebarOpen && (
+        <div
+          className="mobile-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <Sidebar
         user={user}
         active={active}
-        setActive={guardedSetActive}
+        setActive={(view) => {
+          guardedSetActive(view);
+          setSidebarOpen(false);
+        }}
         logout={logout}
         hasAccount={hasAccount}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <main className="up-main">
-        <div className="up-grid">
-          <div className="up-left">
+        <div className="up-panels">
             {active === 'dashboard' && hasAccount && (
               <DashboardPanel
                 setActive={guardedSetActive}
-                onAddMoneySuccess={() => {
-                  fetchBalance();
-                  fetchTransactions({ username: user.username, page: 0 });
-                }}
+                transactions={transactions}
+                balance={balanceRaw}
               />
             )}
 
@@ -274,6 +280,7 @@ export default function UserPage() {
               <TransactionsPanel
                 transactions={transactions}
                 loading={txLoading}
+                balance={balanceRaw}
                 onReload={(params) =>
                   fetchTransactions({ username: user.username, ...params })
                 }
@@ -302,17 +309,6 @@ export default function UserPage() {
             {active === 'myloan' && hasAccount && <LoanRepaymentPanel />}
 
             {active === 'chatbot' && <ChatbotPanel />}
-          </div>
-
-          <RightPanel
-            balance={balance}
-            accountNumber={accountNumber}
-            onSendClick={() =>
-              hasAccount
-                ? guardedSetActive("transfer")
-                : guardedSetActive("createAccount")
-            }
-          />
         </div>
       </main>
 
@@ -323,37 +319,38 @@ export default function UserPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-              style={{
-                position: 'fixed',
-                inset: 0,
-                background: 'rgba(15, 23, 42, 0.65)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 4000,
-                backdropFilter: 'blur(6px)',
-                padding: '1.5rem',
-              }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 4000,
+              backdropFilter: 'blur(8px)',
+              padding: '1.5rem',
+            }}
           >
             <motion.div
-              initial={{ y: 36, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              transition={{ duration: 0.25 }}
+              initial={{ y: 40, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 20, opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3, type: 'spring' }}
               className="card shadow-lg"
               style={{
                 width: '100%',
                 maxWidth: 560,
-                borderRadius: 20,
-                border: '1px solid #e5e7eb',
+                borderRadius: 24,
+                border: '1px solid rgba(255,255,255,0.1)',
                 overflow: 'hidden',
+                background: '#fff',
               }}
             >
               <div
                 style={{
-                  padding: '0.9rem 1.25rem',
-                  background: '#f9fafb',
-                  borderBottom: '1px solid #e5e7eb',
+                  padding: '1.25rem 1.5rem',
+                  background: 'linear-gradient(135deg, #ff6b81 0%, #e63946 100%)',
+                  color: '#fff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -361,127 +358,152 @@ export default function UserPage() {
                 }}
               >
                 <div>
-                  <h5 className="mb-0 fw-semibold">Create your SecureBank account</h5>
-                  <div className="text-muted small">
-                    Unlock transfers, loans, and more in a few quick steps.
+                  <h5 className="mb-1 fw-bold">Create Your Account</h5>
+                  <div style={{ fontSize: 13, opacity: 0.95 }}>
+                    Get started with SecureBank in minutes
                   </div>
                 </div>
-                <span className="badge bg-primary-subtle text-primary small">
-                  Step 1 of 1
-                </span>
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 20,
+                  }}
+                >
+                  <i className="bi bi-bank"></i>
+                </div>
               </div>
 
-              <div className="card-body" style={{ padding: '1.25rem 1.5rem 1.4rem' }}>
+              <div className="card-body" style={{ padding: '1.5rem' }}>
                 <AnimatePresence mode="wait">
                   {showSuccess && (
                     <motion.div
                       key="create-success"
-                      className="alert alert-success py-2 small mb-2"
-                      initial={{ opacity: 0, y: -6 }}
+                      className="alert alert-success d-flex align-items-center py-2 mb-3"
+                      initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      style={{ borderRadius: 12 }}
                     >
-                      Bank account created successfully.
+                      <i className="bi bi-check-circle-fill me-2"></i>
+                      <span className="small">Account created successfully!</span>
                     </motion.div>
                   )}
 
                   {createError && (
                     <motion.div
                       key="create-error"
-                      className="alert alert-danger py-2 small mb-2"
-                      initial={{ opacity: 0, y: -6 }}
+                      className="alert alert-danger d-flex align-items-center py-2 mb-3"
+                      initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      style={{ borderRadius: 12 }}
                     >
-                      {createError}
+                      <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                      <span className="small">{createError}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label small fw-semibold">
+                    <label className="form-label small fw-semibold mb-1">
+                      <i className="bi bi-person-badge me-1 text-danger"></i>
                       Aadhaar Number
                     </label>
                     <input
                       type="text"
-                      className="form-control form-control-sm"
+                      className="form-control"
                       value={formAdhar}
                       onChange={handleAdharChange}
-                      placeholder="12-digit Aadhaar"
+                      placeholder="XXXX XXXX XXXX"
                       maxLength={12}
+                      style={{ borderRadius: 10 }}
                     />
-                    <div className="form-text small">
-                      Only digits, exactly 12 characters.
-                    </div>
+                    <div className="form-text small">12 digits required</div>
                   </div>
 
                   <div className="col-md-6">
-                    <label className="form-label small fw-semibold">
+                    <label className="form-label small fw-semibold mb-1">
+                      <i className="bi bi-credit-card me-1 text-danger"></i>
                       PAN Number
                     </label>
                     <input
                       type="text"
-                      className="form-control form-control-sm"
+                      className="form-control"
                       value={formPAN}
                       onChange={handlePanChange}
                       placeholder="ABCDE1234F"
                       maxLength={10}
+                      style={{ borderRadius: 10, textTransform: 'uppercase' }}
                     />
-                    <div className="form-text small">
-                      5 letters, 4 digits, 1 letter (e.g. ABCDE1234F).
-                    </div>
+                    <div className="form-text small">Format: ABCDE1234F</div>
                   </div>
 
-                  <div className="col-md-6">
-                    <label className="form-label small fw-semibold">
+                  <div className="col-12">
+                    <label className="form-label small fw-semibold mb-1">
+                      <i className="bi bi-bank me-1 text-danger"></i>
                       Account Type
                     </label>
                     <select
-                      className="form-select form-select-sm"
+                      className="form-select"
                       value={formType}
                       onChange={(e) => setFormType(e.target.value)}
+                      style={{ borderRadius: 10 }}
                     >
-                      <option value="">Select type</option>
-                      <option value="savings">Savings Account</option>
-                      <option value="current">Current Account</option>
-                      <option value="salary">Salary Account</option>
+                      <option value="">Choose account type...</option>
+                      <option value="savings">💰 Savings Account</option>
+                      <option value="current">💼 Current Account</option>
+                      <option value="salary">💵 Salary Account</option>
                     </select>
                   </div>
+                </div>
 
-                  <div className="col-md-6 d-flex align-items-end">
-                    <div
-                      className="w-100 small text-muted"
-                      style={{
-                        background: '#f9fafb',
-                        borderRadius: 10,
-                        padding: '0.6rem 0.8rem',
-                        border: '1px dashed #e5e7eb',
-                      }}
-                    >
-                      <div className="fw-semibold mb-1" style={{ fontSize: '0.76rem' }}>
-                        Why we ask for this
-                      </div>
-                      <div style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
-                        Aadhaar and PAN help us verify your identity and keep your
-                        account secure as per KYC guidelines.
-                      </div>
+                <div
+                  className="p-3 mb-3"
+                  style={{
+                    background: 'rgba(230,57,70,0.05)',
+                    borderRadius: 12,
+                    border: '1px solid rgba(230,57,70,0.1)',
+                  }}
+                >
+                  <div className="d-flex align-items-start gap-2">
+                    <i className="bi bi-shield-check-fill text-danger mt-1"></i>
+                    <div className="small text-muted">
+                      <strong className="d-block mb-1">Secure KYC Process</strong>
+                      Your Aadhaar and PAN details are encrypted and verified as per RBI guidelines to ensure maximum security.
                     </div>
                   </div>
                 </div>
 
-                <div className="d-flex justify-content-between align-items-center mt-2">
+                <div className="d-flex justify-content-between align-items-center">
                   <div className="small text-muted">
-                    Logged in as{' '}
-                    <span className="fw-semibold">{user.username}</span>
+                    <i className="bi bi-person-circle me-1"></i>
+                    {user.username}
                   </div>
 
                   <button
-                    className="btn btn-danger rounded-3 px-4"
+                    className="btn btn-danger px-4 py-2"
                     disabled={creatingAccount}
                     onClick={handleCreateAccount}
+                    style={{ borderRadius: 12, fontWeight: 600 }}
                   >
-                    {creatingAccount ? 'Creating...' : 'Create account'}
+                    {creatingAccount ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-circle me-2"></i>
+                        Create Account
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
