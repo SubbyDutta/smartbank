@@ -18,7 +18,7 @@ export default function BalanceHeader({
       transition={{ duration: 0.3 }}
     >
       <div className="balance-compact-content">
-        {/* Left - Subtle Balance Indicator */}
+       
         <motion.div 
           className="balance-indicator"
           onClick={() => setShowDetails(!showDetails)}
@@ -38,7 +38,7 @@ export default function BalanceHeader({
           <i className={`bi bi-eye${showDetails ? '-slash' : ''} ms-2 toggle-icon`}></i>
         </motion.div>
 
-        {/* Right - Quick Actions */}
+       
         <div className="balance-quick-actions">
           <motion.button
             className="btn btn-sm btn-danger"
@@ -62,7 +62,7 @@ export default function BalanceHeader({
         </div>
       </div>
 
-      {/* Expandable Details */}
+     
       <AnimatePresence>
         {showDetails && accountNumber && (
           <motion.div

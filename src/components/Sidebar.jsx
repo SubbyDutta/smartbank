@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function Sidebar({ user, active, setActive, logout, hasAccount, isOpen, onClose }) {
+export default function Sidebar({ user, active, setActive, logout, hasAccount, isOpen, onClose, accountNumber }) {
   const navItems = [
     { key: 'dashboard', label: 'Dashboard', icon: 'bi-house-door-fill' },
     { key: 'transfer', label: 'Transfer Money', icon: 'bi-arrow-left-right' },
@@ -85,6 +85,7 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount, i
           >
             {user.username?.charAt(0)?.toUpperCase() || 'U'}
           </motion.div>
+          
           <div style={{ flex: 1, minWidth: 0 }}>
             <div 
               className='up-username' 
@@ -92,7 +93,7 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount, i
                 fontWeight: 700, 
                 fontSize: 17,
                 color: '#212529',
-                marginBottom: 4,
+                marginBottom: 2,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -100,18 +101,46 @@ export default function Sidebar({ user, active, setActive, logout, hasAccount, i
             >
               {user.username || 'User'}
             </div>
-            <div 
-              className='up-role' 
-              style={{ 
-                fontSize: 12, 
+            
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 4,
+              fontSize: 11 
+            }}>
+              <div className='up-role' style={{ 
                 color: '#6c757d',
                 fontWeight: 600,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
-              }}
-            >
-              <i className='bi bi-patch-check-fill me-1 text-danger'></i>
-              {String(user.role || 'USER').toUpperCase()}
+              }}>
+                <i className='bi bi-patch-check-fill me-1 text-danger'></i>
+                {String(user.role || 'USER').toUpperCase()}
+              </div>
+              
+              {accountNumber && (
+                <div style={{
+                  color: '#28a745',
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '4px 8px',
+                
+                  maxWidth: '100%',
+                  overflow: 'hidden'
+                }}>
+                  <i className='bi bi-credit-card' style={{ fontSize: 10 }} />
+                  <span style={{ 
+                    whiteSpace: 'nowrap', 
+                    overflow: 'hidden', 
+                    textOverflow: 'ellipsis',
+                    fontSize: 12
+                  }}>
+                    {accountNumber}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>

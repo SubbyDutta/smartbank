@@ -8,54 +8,68 @@ import "../styles/auth.css";
 export default function Signup() {
   const [form, setForm] = useState({
     username: "",
+    firstname: "",
+    lastname: "",
     password: "",
     confirmPassword: "",
     email: "",
     mobile: "",
     creditScore: "",
   });
+
   const [noCredit, setNoCredit] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match!");
-      return;
-    }
-
-    if (!noCredit && !form.creditScore) {
-      setError("Please enter your credit score or check 'No credit score'");
-      return;
-    }
-
-    try {
-      const payload = { ...form };
-      if (noCredit) payload.creditScore = "0";
-
-      const res = await API.post("/auth/signup", payload);
-
-      if (typeof res.data === "string" && res.data.includes("already exists")) {
-        setError(res.data);
-      } else {
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false); 
-          navigate("/login"); 
-        }, 2000); 
-      }
-    } catch (err) {
-      setError("Signup failed. Please try again.");
-    }
-  };
-
   const updateForm = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+
+  if (form.password !== form.confirmPassword) {
+    setError("Passwords do not match!");
+    return;
+  }
+
+  if (!noCredit && !form.creditScore) {
+    setError("Please enter your credit score or check 'No credit score'");
+    return;
+  }
+
+  try {
+    const payload = {
+      username: form.username.trim(),
+      firstname: form.firstname.trim(),
+      lastname: form.lastname.trim(),
+      password: form.password,
+      email: form.email.trim(),
+      mobile: form.mobile.trim(),
+      creditScore: noCredit ? 0 : Number(form.creditScore),
+    };
+
+    await API.post("/auth/signup", payload);
+
+    setSuccess(true);
+    setTimeout(() => {
+      setSuccess(false);
+      navigate("/login");
+    }, 2000);
+
+  } catch (err) {
+    const backendMessage =
+      err?.response?.data?.message ||
+      err?.response?.data ||
+      err?.message ||
+      "Signup failed";
+
+    setError(backendMessage);
+  }
+};
+
 
   return (
     <div
@@ -68,7 +82,6 @@ export default function Signup() {
         overflow: "hidden",
       }}
     >
-      
       <motion.div
         className="auth-left"
         initial={{ opacity: 0, x: -50 }}
@@ -104,7 +117,9 @@ export default function Signup() {
             <UserPlus size={32} />
           </motion.div>
 
-          <h1 style={{ fontSize: "1.6rem", marginBottom: "0.5rem" }}>Join SecureBank</h1>
+          <h1 style={{ fontSize: "1.6rem", marginBottom: "0.5rem" }}>
+            Join SecureBank
+          </h1>
           <p style={{ fontSize: "0.88rem", marginBottom: "1rem", lineHeight: 1.3 }}>
             Secure banking with fraud protection.
           </p>
@@ -120,7 +135,6 @@ export default function Signup() {
         </div>
       </motion.div>
 
-     
       <motion.div
         className="auth-right"
         initial={{ opacity: 0, x: 50 }}
@@ -155,7 +169,11 @@ export default function Signup() {
           {error && (
             <motion.div
               className="alert alert-error"
-              style={{ marginBottom: "0.75rem", padding: "0.4rem 0.6rem", fontSize: "0.82rem" }}
+              style={{
+                marginBottom: "0.75rem",
+                padding: "0.4rem 0.6rem",
+                fontSize: "0.82rem",
+              }}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
             >
@@ -163,126 +181,103 @@ export default function Signup() {
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+          >
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-              <div>
-                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Username</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Username"
-                  value={form.username}
-                  onChange={(e) => updateForm("username", e.target.value)}
-                  required
-                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Email</label>
-                <input
-                  type="email"
-                  className="form-input"
-                  placeholder="email@ex.com"
-                  value={form.email}
-                  onChange={(e) => updateForm("email", e.target.value)}
-                  required
-                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
-                />
-              </div>
-            </div>
-
-            
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
-              <div>
-                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Mobile</label>
-                <input
-                  type="tel"
-                  className="form-input"
-                  placeholder="1234567890"
-                  value={form.mobile}
-                  onChange={(e) => updateForm("mobile", e.target.value)}
-                  required
-                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Credit Score</label>
-                <input
-                  type="number"
-                  className="form-input"
-                 
-                  value={form.creditScore}
-                  onChange={(e) => updateForm("creditScore", e.target.value)}
-                  disabled={noCredit}
-                  style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
-                />
-              </div>
-            </div>
-
-           
-            <div>
-              <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Password</label>
               <input
-                type="password"
-                className="form-input"
-                placeholder="Password"
-                value={form.password}
-                onChange={(e) => updateForm("password", e.target.value)}
+                placeholder="First name"
+                value={form.firstname}
+                onChange={(e) => updateForm("firstname", e.target.value)}
                 required
-                style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
+                className="form-input"
+              />
+              <input
+                placeholder="Last name"
+                value={form.lastname}
+                onChange={(e) => updateForm("lastname", e.target.value)}
+                required
+                className="form-input"
               />
             </div>
 
-            <div>
-              <label style={{ fontSize: "0.8rem", marginBottom: "0.2rem", display: "block" }}>Confirm Password</label>
-              <input
-                type="password"
-                className="form-input"
-                placeholder="Confirm"
-                value={form.confirmPassword}
-                onChange={(e) => updateForm("confirmPassword", e.target.value)}
-                required
-                style={{ padding: "0.5rem 0.6rem", fontSize: "0.88rem" }}
-              />
-            </div>
+            <input
+              placeholder="Username"
+              value={form.username}
+              onChange={(e) => updateForm("username", e.target.value)}
+              required
+              className="form-input"
+            />
 
-           
-            <label style={{ 
-              fontSize: "0.8rem", 
-              display: "flex", 
-              alignItems: "center", 
-              gap: "0.4rem",
-              opacity: noCredit ? 0.6 : 1,
-              marginBottom: "0.75rem"
-            }}>
+            <input
+              type="email"
+              placeholder="email@ex.com"
+              value={form.email}
+              onChange={(e) => updateForm("email", e.target.value)}
+              required
+              className="form-input"
+            />
+
+            <input
+              placeholder="1234567890"
+              value={form.mobile}
+              onChange={(e) => updateForm("mobile", e.target.value)}
+              required
+              className="form-input"
+            />
+
+            <input
+              type="number"
+              placeholder="Credit score"
+              value={form.creditScore}
+              disabled={noCredit}
+              onChange={(e) => updateForm("creditScore", e.target.value)}
+              className="form-input"
+            />
+
+            <label style={{ fontSize: "0.8rem", display: "flex", gap: "0.4rem" }}>
               <input
                 type="checkbox"
                 checked={noCredit}
                 onChange={(e) => setNoCredit(e.target.checked)}
-                style={{ width: 16, height: 16 }}
               />
               No credit score yet
             </label>
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={(e) => updateForm("password", e.target.value)}
+              required
+              className="form-input"
+            />
+
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={form.confirmPassword}
+              onChange={(e) => updateForm("confirmPassword", e.target.value)}
+              required
+              className="form-input"
+            />
 
             <motion.button
               type="submit"
               className="btn-primary"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              style={{ 
-                padding: "0.65rem", 
-                fontSize: "0.95rem",
-                borderRadius: 10,
-              
-              }}
             >
               Create Account
             </motion.button>
           </form>
 
-          <div  className="auth-footer">
-            Already have account? <a href="/login" style={{ color: "#f63b3bff" }}>Sign In</a>
+          <div className="auth-footer">
+            Already have account?{" "}
+            <a href="/login" style={{ color: "#f63b3bff" }}>
+              Sign In
+            </a>
           </div>
         </div>
       </motion.div>
@@ -301,16 +296,9 @@ export default function Signup() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
             >
-              <motion.div
-                className="success-icon"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-              >
-                <CheckCircle size={36} />
-              </motion.div>
-              <h4 style={{ margin: "0.5rem 0" }}>Success!</h4>
-              <p style={{ margin: 0, fontSize: "0.9rem" }}>Redirecting to login...</p>
+              <CheckCircle size={36} />
+              <h4>Success!</h4>
+              <p>Redirecting to login…</p>
             </motion.div>
           </motion.div>
         )}

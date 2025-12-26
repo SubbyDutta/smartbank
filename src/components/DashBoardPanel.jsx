@@ -46,15 +46,15 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Update every minute
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000); 
     return () => clearInterval(timer);
   }, []);
 
-  // Process transactions for chart - memoized for performance
+ 
   const chartData = useMemo(() => {
     if (!transactions || transactions.length === 0) return [];
 
-    // Group transactions by date
+    
     const groupedByDate = {};
     
     transactions.forEach((tx) => {
@@ -75,18 +75,18 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
       groupedByDate[dateKey].count += 1;
     });
 
-    // Convert to array and get last 7 days
+    
     return Object.values(groupedByDate)
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .slice(-7);
   }, [transactions]);
 
-  // Get recent 5 transactions - memoized
+ 
   const recentTransactions = useMemo(() => {
     return (transactions || []).slice(0, 5);
   }, [transactions]);
 
-  // Calculate transaction stats - memoized
+ 
   const stats = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return {
@@ -157,7 +157,7 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
       flexDirection: 'column',
       gap: 24,
     }}>
-      {/* Hero Section */}
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -253,6 +253,7 @@ export default function UserPage() {
         logout={logout}
         hasAccount={hasAccount}
         isOpen={sidebarOpen}
+        accountNumber={accountNumber}
         onClose={() => setSidebarOpen(false)}
       />
 

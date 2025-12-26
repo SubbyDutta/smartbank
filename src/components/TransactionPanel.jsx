@@ -108,7 +108,7 @@ export default function TransactionsPanel({ transactions, loading, balance, onRe
       flexDirection: 'column',
       gap: 20,
     }}>
-      {/* Header Card */}
+    
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -198,7 +198,7 @@ export default function TransactionsPanel({ transactions, loading, balance, onRe
         </div>
       </motion.div>
 
-      {/* Filters Panel */}
+      
       <AnimatePresence>
         {showFilters && (
           <motion.div
@@ -335,7 +335,7 @@ export default function TransactionsPanel({ transactions, loading, balance, onRe
         )}
       </AnimatePresence>
 
-      {/* Transactions List */}
+      
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -348,7 +348,7 @@ export default function TransactionsPanel({ transactions, loading, balance, onRe
           overflow: 'hidden',
         }}
       >
-        {/* Table Header */}
+       
         <div style={{
           padding: '20px 28px',
           borderBottom: '1px solid #f3f4f6',
@@ -380,7 +380,7 @@ export default function TransactionsPanel({ transactions, loading, balance, onRe
           </div>
         </div>
 
-        {/* Table Content */}
+       
         <div style={{ overflowX: 'auto' }}>
           {loading ? (
             <div className='text-center py-5'>
