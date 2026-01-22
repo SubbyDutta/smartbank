@@ -1,6 +1,6 @@
 // src/AdminDashboard.jsx
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import API from "./api";
 import { jwtDecode } from "jwt-decode";
 
@@ -12,10 +12,37 @@ import UsersView from "./components/admin/UsersView";
 import AccountsView from "./components/admin/AccountsView";
 import LoansView from "./components/admin/LoansView";
 import AdminRepaymentTable from "./components/admin/AdminRepaymentTable";
+import AuditLogs from "./components/admin/AuditLogs";
+import { TransactionChart, LoanStatusChart } from "./components/admin/AdminCharts";
 
 const PAGE = 0;
 const SIZE = 10;
 const SIDEBAR_WIDTH = 280;
+
+// Premium Bento Card Component
+const BentoCard = ({ children, className = "", delay = 0, onClick }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    whileHover={onClick ? { scale: 1.02, cursor: "pointer", borderColor: 'var(--color-black)' } : { scale: 1.01, borderColor: 'rgba(0,0,0,0.1)' }}
+    className={`render-card ${className}`}
+    onClick={onClick}
+    style={{
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      position: "relative",
+      padding: '24px', // Handled by render-card class usually, but let's be explicit
+      background: '#fff',
+      border: '1px solid rgba(0,0,0,0.06)',
+      boxShadow: "0 10px 30px -10px rgba(0,0,0,0.04)",
+      borderRadius: '24px'
+    }}
+  >
+    {children}
+  </motion.div>
+);
 
 export default function AdminDashboard() {
   const [view, setView] = useState("home");
@@ -40,17 +67,23 @@ export default function AdminDashboard() {
   const [repayPage, setRepayPage] = useState(PAGE);
   const [repayTotalPages, setRepayTotalPages] = useState(0);
 
-  
+
   const [bankPoolBalance, setBankPoolBalance] = useState(0);
   const [showTopupModal, setShowTopupModal] = useState(false);
   const [topupAmount, setTopupAmount] = useState("");
+
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalAccounts: 0,
+    totalTransactions: 0
+  });
 
   const [adminUser, setAdminUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const token = localStorage.getItem("token");
 
-  
+
   useEffect(() => {
     if (!token) return;
     try {
@@ -65,13 +98,13 @@ export default function AdminDashboard() {
     }
   }, [token]);
 
- 
+
   const extractPageData = (r) => ({
     content: r?.data?.content || [],
     totalPages: r?.data?.totalPages || 0,
   });
 
-  
+
   const loadTransactions = async (p = 0) => {
     const r = await API.get(`/transactions/transactions?page=${p}&size=${SIZE}`);
     const { content, totalPages } = extractPageData(r);
@@ -116,13 +149,28 @@ export default function AdminDashboard() {
     }
   };
 
- 
+  const loadStats = async () => {
+    try {
+      const res = await API.get("/admin/analytics/stats");
+      setStats(res.data);
+    } catch (err) {
+      console.warn("Analytics stats not available, using fallbacks:", err.message);
+      setStats({
+        totalUsers: users.length || 0,
+        totalAccounts: accounts.length || 0,
+        totalTransactions: transactions.length || 0
+      });
+    }
+  };
+
+
   useEffect(() => {
     loadTransactions(0);
     loadUsers(0);
     loadLoans(0);
     loadAccounts(0);
     loadBankPool();
+    loadStats();
   }, []);
 
   const handleLogout = () => {
@@ -148,20 +196,18 @@ export default function AdminDashboard() {
     }
   };
 
- 
+
   const getTypeLabel = (isForeign) => {
-   
     return isForeign === 0 ? "Domestic" : "Foreign";
   };
 
   const getTypeBadgeClass = (isForeign) => {
-   
     return isForeign === 0
       ? "badge bg-success-subtle text-success"
       : "badge bg-warning-subtle text-warning";
   };
 
-  
+
   const HomeDashboard = () => {
     const totalTransactionsEstimate = transTotalPages
       ? transTotalPages * SIZE
@@ -178,198 +224,188 @@ export default function AdminDashboard() {
 
     const cards = [
       {
-        label: "Active Accounts",
-        value: totalAccountsEstimate,
-        badge: "Stable",
+        label: "Total Users",
+        value: stats.totalUsers,
+        badge: "Registered",
+        color: "var(--color-black)",
+        icon: "bi-people"
       },
       {
-        label: "Pending Loans",
-        value: totalLoansEstimate,
-        badge: "Review required",
+        label: "Total Accounts",
+        value: stats.totalAccounts,
+        badge: "Bank Profiles",
+        color: "#3b82f6",
+        icon: "bi-person-badge"
       },
       {
-        label: "Transactions (est.)",
-        value: totalTransactionsEstimate,
-        badge: "Live activity",
+        label: "Total Transactions",
+        value: stats.totalTransactions,
+        badge: "Processed",
+        color: "#10b981",
+        icon: "bi-arrow-left-right"
       },
       {
-        label: "Bank Pool",
+        label: "Pool Balance",
         value: bankPoolBalance,
-        badge: "Top-up",
+        badge: "Tap to Top-up",
         isBankPool: true,
+        color: "#000000",
+        icon: "bi-bank"
       },
     ];
 
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-      >
-        
-        <div className="row g-3 mb-3">
-          {cards.map((c) => (
-            <div className="col-md-3 col-sm-6" key={c.label}>
-              <div
-                className="card border-0 shadow-sm h-100"
-                style={{
-                  borderRadius: 16,
-                  backgroundColor: "#ffffff",
-                  cursor: c.isBankPool ? "pointer" : "default",
-                }}
-                onClick={c.isBankPool ? () => setShowTopupModal(true) : undefined}
-              >
-                <div className="card-body py-3 px-3 d-flex flex-column justify-content-between">
-                  <div>
-                    <div className="text-muted small mb-1">{c.label}</div>
-                    <h5 className="fw-bold mb-1">
-                      {c.value?.toLocaleString("en-IN") || 0}
-                    </h5>
-                  </div>
-                  <span className="badge bg-light text-muted small">
+      <div style={{ padding: 24, maxWidth: 1600, margin: '0 auto' }}>
+        {/* Stats Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 24,
+          marginBottom: 32
+        }}>
+          {cards.map((c, i) => (
+            <BentoCard key={c.label} delay={i * 0.1} onClick={c.isBankPool ? () => setShowTopupModal(true) : undefined}>
+              <div style={{ padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <div>
+                  <div style={{ color: '#666', fontSize: '0.9rem', fontWeight: 600, marginBottom: 8 }}>{c.label}</div>
+                  <h3 style={{ fontSize: '2rem', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>
+                    {c.value?.toLocaleString("en-IN") || 0}
+                  </h3>
+                </div>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  background: `${c.color}15`,
+                  color: c.color,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.2rem'
+                }}>
+                  <i className={`bi ${c.icon}`}></i>
+                </div>
+              </div>
+              {c.badge && (
+                <div style={{ padding: '0 24px 24px' }}>
+                  <span style={{
+                    padding: '4px 12px',
+                    borderRadius: 20,
+                    background: '#f3f4f6',
+                    color: '#4b5563',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
                     {c.badge}
                   </span>
                 </div>
-              </div>
-            </div>
+              )}
+            </BentoCard>
           ))}
         </div>
 
-       
-        <div className="row g-3">
-          <div className="col-lg-8">
-            <div
-              className="card border-0 shadow-sm h-100"
-              style={{ borderRadius: 16, backgroundColor: "#ffffff" }}
-            >
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="card-title mb-0">Recent Transactions</h5>
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={() => setView("transactions")}
-                  >
-                    View all
-                  </button>
-                </div>
-                <p className="text-muted small mb-3">
-                  Snapshot of the latest activity in the system.
-                </p>
-                <div className="table-responsive">
-                  <table className="table table-sm align-middle mb-0">
-                    <thead>
-                      <tr className="text-muted small">
-                        <th>Time</th>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Amount</th>
-                        <th>Type</th>
+        {/* Bento Board */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateRows: 'repeat(2, minmax(300px, auto))',
+          gap: 24,
+        }}>
+
+          {/* Chart Area - Span 2 Cols */}
+          <div style={{ gridColumn: 'span 2', gridRow: 'span 1' }}>
+            <BentoCard delay={0.4}>
+              <div style={{ padding: 24 }}>
+                <h5 style={{ fontWeight: 700 }}>Transaction Velocity</h5>
+              </div>
+              <div style={{ flex: 1, padding: '0 24px 24px' }}>
+                <TransactionChart data={transactions} />
+              </div>
+            </BentoCard>
+          </div>
+
+          {/* System Health */}
+          <div style={{ gridColumn: 'span 1' }}>
+            <BentoCard delay={0.5}>
+              <div style={{ padding: 24, borderBottom: '1px solid #f0f0f0' }}>
+                <h5 style={{ fontWeight: 700, margin: 0 }}>System Health</h5>
+              </div>
+              <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {[
+                  { label: 'API Latency', status: 'Optimal', color: '#10b981' },
+                  { label: 'Fraud Detection', status: 'Active', color: '#3b82f6' },
+                  { label: 'Database', status: 'Healthy', color: '#10b981' },
+                  { label: 'Server CPU', status: '24%', color: '#f59e0b' },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, color: '#444' }}>{item.label}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, boxShadow: `0 0 10px ${item.color}` }} />
+                      <span style={{ fontSize: '0.9rem', fontWeight: 600, color: item.color }}>{item.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </BentoCard>
+          </div>
+
+          {/* Recent Transactions List - Span 2 Cols */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <BentoCard delay={0.6}>
+              <div style={{ padding: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
+                <h5 style={{ fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>Recent Activity</h5>
+                <button onClick={() => setView("transactions")} style={{ border: 'none', background: 'none', color: 'var(--color-render-purple)', fontWeight: 700, cursor: 'pointer' }}>View All</button>
+              </div>
+              <div style={{ padding: 0 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    {transactions.slice(0, 5).map(t => (
+                      <tr key={t.id} style={{ borderBottom: '1px solid #f9f9f9', transition: 'background 0.2s' }}>
+                        <td style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#666' }}>{new Date(t.timestamp).toLocaleTimeString()}</td>
+                        <td style={{ padding: '16px 24px', fontWeight: 500 }}>{t.senderAccount}</td>
+                        <td style={{ padding: '16px 24px', fontWeight: 500 }}>{t.receiverAccount}</td>
+                        <td style={{ padding: '16px 24px', fontWeight: 700, textAlign: 'right' }}>₹{t.amount}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.slice(0, 9).map((t) => {
-                        const isForeign = t.isForeign; 
-                        return (
-                          <tr key={t.id}>
-                            <td className="small">
-                              {t.timestamp}
-                            </td>
-                            <td className="small">{t.senderAccount}</td>
-                            <td className="small">{t.receiverAccount}</td>
-                            <td className="small fw-semibold">₹{t.amount}</td>
-                            <td className="small">
-                              <span className={getTypeBadgeClass(isForeign)}>
-                                {getTypeLabel(isForeign)}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {transactions.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan="5"
-                            className="text-center text-muted small"
-                          >
-                            No transactions loaded yet.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
+            </BentoCard>
           </div>
 
-          <div className="col-lg-4">
-            <div
-              className="card border-0 shadow-sm mb-3"
-              style={{ borderRadius: 16, backgroundColor: "#ffffff", height: 200 }}
-            >
-              <div className="card-body">
-                <h6 className="card-title mb-2">Loan Approval Progress</h6>
-                <p className="text-muted small mb-3">
-                  Pending loans cleared in this cycle.
-                </p>
-                <div className="progress" style={{ height: 8 }}>
-                  <div
-                    className="progress-bar bg-danger"
-                    role="progressbar"
-                    style={{ width: "75%" }}
-                  />
-                </div>
-                <div className="d-flex justify-content-between mt-2 small text-muted">
-                  <span>Completed</span>
-                  <span>75%</span>
-                </div>
+          {/* Loan Approval Pie Chart */}
+          <div style={{ gridColumn: 'span 1' }}>
+            <BentoCard delay={0.7}>
+              <div style={{ padding: 24 }}>
+                <h5 style={{ fontWeight: 700 }}>Loan Distribution</h5>
               </div>
-            </div>
-
-            <div
-              className="card border-0 shadow-sm"
-              style={{
-                borderRadius: 16,
-                backgroundColor: "#ffffff",
-                height: 200,
-                marginTop: 10,
-              }}
-            >
-              <div className="card-body">
-                <h6 className="card-title mb-2">System Health</h6>
-                <ul className="list-unstyled small mb-0">
-                  <li className="d-flex justify-content-between mb-1">
-                    <span>API Latency</span>
-                    <span className="text-success fw-semibold">Normal</span>
-                  </li>
-                  <li className="d-flex justify-content-between mb-1">
-                    <span>Fraud Engine</span>
-                    <span className="text-success fw-semibold">Online</span>
-                  </li>
-                  <li className="d-flex justify-content-between">
-                    <span>Disbursement Queue</span>
-                    <span className="text-warning fw-semibold">Moderate</span>
-                  </li>
-                </ul>
+              <div style={{ flex: 1, padding: 24 }}>
+                <LoanStatusChart loans={loans} />
               </div>
-            </div>
+            </BentoCard>
           </div>
+
         </div>
-      </motion.div>
+      </div>
     );
   };
 
   return (
     <>
+      {/* Global Background */}
+      <div className="bg-grid" />
+
       <div
+        className="admin-root"
         style={{
           minHeight: "100vh",
-          backgroundColor: "#ffffffff",
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+          position: "relative",
+          zIndex: 1
         }}
       >
-       
+
         <motion.div
           initial={false}
           animate={{ x: sidebarOpen ? 0 : -SIDEBAR_WIDTH }}
@@ -384,14 +420,14 @@ export default function AdminDashboard() {
             onUsers={() => setView("users")}
             onAccounts={() => setView("accounts")}
             searchId=""
-            setSearchId={() => {}}
-            onSearchUser={() => {}}
+            setSearchId={() => { }}
+            onSearchUser={() => { }}
             adminUser={adminUser}
             onLogout={handleLogout}
           />
         </motion.div>
 
-       
+
         <div
           style={{
             marginLeft: sidebarOpen ? SIDEBAR_WIDTH : 0,
@@ -408,123 +444,203 @@ export default function AdminDashboard() {
             className="container-fluid"
             style={{ paddingTop: 96, paddingBottom: 24 }}
           >
-            {view === "home" && <HomeDashboard />}
+            <AnimatePresence mode="wait">
+              {view === "home" && (
+                <motion.div
+                  key="home"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <HomeDashboard />
+                </motion.div>
+              )}
 
-            {view === "transactions" && (
-              <TransactionsView
-                data={transactions}
-                load={loadTransactions}
-                page={transPage}
-                setPage={setTransPage}
-                totalPages={transTotalPages}
-              />
-            )}
+              {view === "transactions" && (
+                <motion.div
+                  key="transactions"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <TransactionsView
+                    data={transactions}
+                    load={loadTransactions}
+                    page={transPage}
+                    setPage={setTransPage}
+                    totalPages={transTotalPages}
+                  />
+                </motion.div>
+              )}
 
-            {view === "users" && (
-              <UsersView
-                users={users}
-                load={loadUsers}
-                page={userPage}
-                setPage={setUserPage}
-                totalPages={userTotalPages}
-              />
-            )}
+              {view === "users" && (
+                <motion.div
+                  key="users"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <UsersView
+                    users={users}
+                    load={loadUsers}
+                    page={userPage}
+                    setPage={setUserPage}
+                    totalPages={userTotalPages}
+                  />
+                </motion.div>
+              )}
 
-            {view === "accounts" && (
-              <AccountsView
-                accounts={accounts}
-                load={loadAccounts}
-                page={accPage}
-                setPage={setAccPage}
-                totalPages={accTotalPages}
-              />
-            )}
+              {view === "accounts" && (
+                <motion.div
+                  key="accounts"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <AccountsView
+                    accounts={accounts}
+                    load={loadAccounts}
+                    page={accPage}
+                    setPage={setAccPage}
+                    totalPages={accTotalPages}
+                  />
+                </motion.div>
+              )}
 
-            {view === "loans" && (
-              <LoansView
-                loans={loans}
-                load={loadLoans}
-                page={loanPage}
-                setPage={setLoanPage}
-                totalPages={loanTotalPages}
-              />
-            )}
+              {view === "loans" && (
+                <motion.div
+                  key="loans"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <LoansView
+                    loans={loans}
+                    load={loadLoans}
+                    page={loanPage}
+                    setPage={setLoanPage}
+                    totalPages={loanTotalPages}
+                  />
+                </motion.div>
+              )}
 
-            {view === "repayments" && (
-              <AdminRepaymentTable
-                repayments={repayments}
-                load={loadRepayments}
-                page={repayPage}
-                setPage={setRepayPage}
-                totalPages={repayTotalPages}
-              />
-            )}
+              {view === "repayments" && (
+                <motion.div
+                  key="repayments"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <AdminRepaymentTable
+                    repayments={repayments}
+                    load={loadRepayments}
+                    page={repayPage}
+                    setPage={setRepayPage}
+                    totalPages={repayTotalPages}
+                  />
+                </motion.div>
+              )}
+
+              {view === "audit" && (
+                <motion.div
+                  key="audit"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <AuditLogs />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </main>
         </div>
       </div>
 
-      
-      {showTopupModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 5000,
-            padding: "2rem",
-          }}
-          onClick={() => setShowTopupModal(false)}
-        >
-          <div
+
+      <AnimatePresence>
+        {showTopupModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             style={{
-              background: "white",
-              borderRadius: 12,
-              width: "100%",
-              maxWidth: 400,
-              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.5)",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 5000,
+              padding: "2rem",
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={() => setShowTopupModal(false)}
           >
-            <div className="p-4 border-bottom">
-              <h5 className="mb-1">Bank Pool Top-up</h5>
-              <p className="text-muted small mb-0">
-                Current: ₹{bankPoolBalance?.toLocaleString("en-IN") || 0}
-              </p>
-            </div>
-            <div className="p-4">
-              <div className="mb-3">
-                <label className="form-label small">Amount (₹)</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  placeholder="Enter amount"
-                  value={topupAmount}
-                  onChange={(e) => setTopupAmount(e.target.value)}
-                  min="0"
-                />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              style={{
+                background: "white",
+                borderRadius: 24,
+                width: "100%",
+                maxWidth: 400,
+                boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+                overflow: "hidden"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 border-bottom bg-light">
+                <h5 className="mb-1 fw-bold">Bank Pool Top-up</h5>
+                <p className="text-muted small mb-0">
+                  Current: ₹{bankPoolBalance?.toLocaleString("en-IN") || 0}
+                </p>
               </div>
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-outline-secondary flex-grow-1"
-                  onClick={() => setShowTopupModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-primary flex-grow-1"
-                  onClick={handleTopup}
-                  disabled={!topupAmount || parseFloat(topupAmount) <= 0}
-                >
-                  Add Funds
-                </button>
+              <div className="p-4">
+                <div className="mb-4">
+                  <label className="form-label small fw-bold text-uppercase text-muted">Amount to Add</label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-white border-end-0">₹</span>
+                    <input
+                      type="number"
+                      className="form-control border-start-0 ps-0"
+                      placeholder="Enter amount"
+                      value={topupAmount}
+                      onChange={(e) => setTopupAmount(e.target.value)}
+                      min="0"
+                      style={{ fontSize: '1.2rem', fontWeight: 600 }}
+                    />
+                  </div>
+                </div>
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn btn-light flex-grow-1 fw-bold"
+                    onClick={() => setShowTopupModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-dark flex-grow-1 fw-bold"
+                    onClick={handleTopup}
+                    disabled={!topupAmount || parseFloat(topupAmount) <= 0}
+                    style={{ background: 'var(--color-render-purple)', border: 'none' }}
+                  >
+                    Add Funds
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

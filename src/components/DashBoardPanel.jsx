@@ -3,41 +3,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const quickActions = [
-  { 
-    title: 'Send Money', 
-    icon: 'bi-send-fill', 
-    action: 'transfer', 
-    gradient: 'linear-gradient(135deg, #e63946 0%, #ff6b81 100%)', 
+  {
+    title: 'Send Money',
+    icon: 'bi-send-fill',
+    action: 'transfer',
+    gradient: 'var(--color-black)',
     desc: 'Instant transfers',
-    iconBg: '#fee2e2',
-    iconColor: '#e63946'
+    iconBg: 'var(--bg-secondary)',
+    iconColor: 'var(--color-black)'
   },
-  { 
-    title: 'Add Funds', 
-    icon: 'bi-wallet2', 
-    action: 'addMoney', 
-    gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+  {
+    title: 'Add Funds',
+    icon: 'bi-wallet2',
+    action: 'addMoney',
+    gradient: 'var(--color-black)',
     desc: 'Top up account',
-    iconBg: '#d1fae5',
-    iconColor: '#059669'
+    iconBg: 'var(--bg-secondary)',
+    iconColor: 'var(--color-black)'
   },
-  { 
-    title: 'View History', 
-    icon: 'bi-clock-history', 
-    action: 'tx', 
-    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', 
+  {
+    title: 'View History',
+    icon: 'bi-clock-history',
+    action: 'tx',
+    gradient: 'var(--color-black)',
     desc: 'All transactions',
-    iconBg: '#ede9fe',
-    iconColor: '#7c3aed'
+    iconBg: 'var(--bg-secondary)',
+    iconColor: 'var(--color-black)'
   },
-  { 
-    title: 'Quick Loan', 
-    icon: 'bi-lightning-charge-fill', 
-    action: 'loan', 
-    gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', 
+  {
+    title: 'Quick Loan',
+    icon: 'bi-lightning-charge-fill',
+    action: 'loan',
+    gradient: 'var(--color-black)',
     desc: 'Fast approval',
-    iconBg: '#fef3c7',
-    iconColor: '#d97706'
+    iconBg: 'var(--bg-secondary)',
+    iconColor: 'var(--color-black)'
   },
 ];
 
@@ -46,23 +46,23 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000); 
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
- 
+
   const chartData = useMemo(() => {
     if (!transactions || transactions.length === 0) return [];
 
-    
+
     const groupedByDate = {};
-    
+
     transactions.forEach((tx) => {
       if (!tx.timestamp) return;
-      
+
       const date = new Date(tx.timestamp);
       const dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
+
       if (!groupedByDate[dateKey]) {
         groupedByDate[dateKey] = {
           date: dateKey,
@@ -70,23 +70,23 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
           count: 0,
         };
       }
-      
+
       groupedByDate[dateKey].amount += Number(tx.amount) || 0;
       groupedByDate[dateKey].count += 1;
     });
 
-    
+
     return Object.values(groupedByDate)
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       .slice(-7);
   }, [transactions]);
 
- 
+
   const recentTransactions = useMemo(() => {
     return (transactions || []).slice(0, 5);
   }, [transactions]);
 
- 
+
   const stats = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return {
@@ -97,7 +97,7 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
     }
 
     const totalVolume = transactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
-    
+
     return {
       totalTransactions: transactions.length,
       totalVolume,
@@ -109,23 +109,23 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
     if (active && payload && payload.length) {
       return (
         <div style={{
-          background: 'rgba(255, 255, 255, 0.98)',
+          background: 'var(--bg-primary)',
           backdropFilter: 'blur(10px)',
           padding: '12px 16px',
           borderRadius: 12,
-          border: '1px solid rgba(230, 57, 70, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          border: '1px solid var(--border-light)',
+          boxShadow: 'var(--shadow-lg)',
         }}>
-          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: 8, fontWeight: 600 }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: 8, fontWeight: 600 }}>
             {payload[0].payload.date}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e63946' }} />
-            <span style={{ fontSize: '0.8125rem', color: '#111827', fontWeight: 600 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-black)' }} />
+            <span style={{ fontSize: '0.8125rem', color: 'var(--text-primary)', fontWeight: 600 }}>
               ₹{payload[0].value.toLocaleString()}
             </span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: 4 }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>
             {payload[0].payload.count} transaction{payload[0].payload.count !== 1 ? 's' : ''}
           </div>
         </div>
@@ -142,11 +142,12 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
     }).format(amount);
   };
 
+  // Helper to get consistent icon/color for transaction types
   const getTransactionIcon = (transaction) => {
     const amount = transaction.amount || 0;
-    if (amount > 50000) return { icon: 'bi-lightning-charge-fill', color: '#f59e0b' };
-    if (amount > 10000) return { icon: 'bi-arrow-up-circle-fill', color: '#8b5cf6' };
-    return { icon: 'bi-arrow-right-circle-fill', color: '#e63946' };
+    if (amount > 50000) return { icon: 'bi-lightning-charge-fill', color: 'var(--color-black)' };
+    if (amount > 10000) return { icon: 'bi-arrow-up-circle-fill', color: 'var(--color-primary-light)' };
+    return { icon: 'bi-arrow-right-circle-fill', color: 'var(--text-secondary)' };
   };
 
   return (
@@ -157,18 +158,18 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
       flexDirection: 'column',
       gap: 24,
     }}>
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: 'linear-gradient(135deg, #e63946 0%, #ff6b81 100%)',
-          borderRadius: 24,
+          background: 'var(--color-black)',
+          borderRadius: 'var(--radius-xl)',
           padding: 32,
-          color: '#fff',
+          color: 'var(--text-inverse)',
           position: 'relative',
           overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(230, 57, 70, 0.3)',
+          boxShadow: 'var(--shadow-xl)',
         }}
       >
         <div style={{
@@ -178,30 +179,32 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
           width: 300,
           height: 300,
           borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-tertiary)',
+          opacity: 0.1,
           filter: 'blur(80px)',
         }} />
-        
+
         <div className='position-relative'>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: 8, fontWeight: 500 }}>
+            <div style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: 8, fontWeight: 500 }}>
               {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 8, letterSpacing: '-0.5px' }}>
               Dashboard
             </h2>
-            <p style={{ fontSize: '0.9375rem', opacity: 0.95, marginBottom: 0 }}>
+            <p style={{ fontSize: '0.9375rem', opacity: 0.8, marginBottom: 0 }}>
               Overview of your last 20 transactions • For more history, visit{' '}
-              <span 
+              <span
                 onClick={() => setActive('tx')}
-                style={{ 
-                  textDecoration: 'underline', 
+                style={{
+                  textDecoration: 'underline',
                   cursor: 'pointer',
                   fontWeight: 600,
+                  color: 'var(--color-white)'
                 }}
               >
                 Transactions
@@ -223,7 +226,7 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
             Quick Actions
           </h5>
         </div>
-        
+
         <div className='row g-3'>
           {quickActions.map((action, idx) => (
             <div key={idx} className='col-lg-3 col-md-6'>
@@ -234,14 +237,14 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 style={{
-                  background: '#fff',
-                  borderRadius: 18,
+                  background: 'var(--bg-primary)',
+                  borderRadius: 'var(--radius-xl)',
                   padding: 24,
                   cursor: 'pointer',
-                  border: hoveredAction === idx ? '2px solid #e63946' : '2px solid transparent',
-                  boxShadow: hoveredAction === idx 
-                    ? '0 12px 40px rgba(230, 57, 70, 0.2)' 
-                    : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                  border: hoveredAction === idx ? '2px solid var(--color-black)' : '2px solid transparent',
+                  boxShadow: hoveredAction === idx
+                    ? 'var(--shadow-lg)'
+                    : 'var(--shadow-sm)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   height: '100%',
                   position: 'relative',
@@ -263,7 +266,7 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                     }}
                   />
                 )}
-                
+
                 <div className='text-center position-relative'>
                   <motion.div
                     animate={{ rotate: hoveredAction === idx ? [0, -10, 10, -10, 0] : 0 }}
@@ -321,24 +324,24 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                 </p>
               </div>
             </div>
-            
+
             {chartData.length > 0 ? (
               <ResponsiveContainer width='100%' height={280}>
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id='colorAmount' x1='0' y1='0' x2='0' y2='1'>
-                      <stop offset='5%' stopColor='#e63946' stopOpacity={0.3}/>
-                      <stop offset='95%' stopColor='#e63946' stopOpacity={0}/>
+                      <stop offset='5%' stopColor='var(--color-black)' stopOpacity={0.1} />
+                      <stop offset='95%' stopColor='var(--color-black)' stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray='3 3' stroke='#f3f4f6' />
-                  <XAxis 
-                    dataKey='date' 
-                    stroke='#9ca3af' 
+                  <CartesianGrid strokeDasharray='3 3' stroke='var(--border-light)' />
+                  <XAxis
+                    dataKey='date'
+                    stroke='var(--text-tertiary)'
                     style={{ fontSize: '0.75rem', fontWeight: 600 }}
                   />
-                  <YAxis 
-                    stroke='#9ca3af' 
+                  <YAxis
+                    stroke='var(--text-tertiary)'
                     style={{ fontSize: '0.75rem', fontWeight: 600 }}
                     tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
                   />
@@ -346,8 +349,8 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                   <Area
                     type='monotone'
                     dataKey='amount'
-                    stroke='#e63946'
-                    strokeWidth={3}
+                    stroke='var(--color-black)'
+                    strokeWidth={2}
                     fill='url(#colorAmount)'
                     animationDuration={1000}
                   />
@@ -393,18 +396,18 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
             <h5 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827', marginBottom: 20 }}>
               Statistics
             </h5>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{
                 padding: 16,
                 borderRadius: 14,
-                background: 'rgba(230, 57, 70, 0.05)',
-                border: '1px solid rgba(230, 57, 70, 0.1)',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-light)',
               }}>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: 6, fontWeight: 600 }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 600 }}>
                   Total Transactions
                 </div>
-                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#e63946' }}>
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                   {stats.totalTransactions}
                 </div>
               </div>
@@ -412,13 +415,13 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
               <div style={{
                 padding: 16,
                 borderRadius: 14,
-                background: 'rgba(16, 185, 129, 0.05)',
-                border: '1px solid rgba(16, 185, 129, 0.1)',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-light)',
               }}>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: 6, fontWeight: 600 }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 600 }}>
                   Total Volume
                 </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#059669' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                   {formatCurrency(stats.totalVolume)}
                 </div>
               </div>
@@ -426,13 +429,13 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
               <div style={{
                 padding: 16,
                 borderRadius: 14,
-                background: 'rgba(139, 92, 246, 0.05)',
-                border: '1px solid rgba(139, 92, 246, 0.1)',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-light)',
               }}>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: 6, fontWeight: 600 }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 600 }}>
                   Avg. Transaction
                 </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#7c3aed' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                   {formatCurrency(stats.avgTransaction)}
                 </div>
               </div>
@@ -477,8 +480,8 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
               transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#e63946';
-              e.currentTarget.style.color = '#e63946';
+              e.currentTarget.style.borderColor = 'var(--color-render-purple)';
+              e.currentTarget.style.color = 'var(--color-render-purple)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = '#e5e7eb';
@@ -524,7 +527,7 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                   >
                     <i className={`bi ${iconData.icon}`} style={{ fontSize: 20, color: iconData.color }}></i>
                   </div>
-                  
+
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', marginBottom: 2 }}>
                       {activity.senderAccount || 'N/A'} → {activity.receiverAccount || 'N/A'}
@@ -538,7 +541,7 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                       }) : 'N/A'}
                     </div>
                   </div>
-                  
+
                   <div
                     style={{
                       fontSize: '1rem',
@@ -579,10 +582,10 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
         style={{
-          background: 'linear-gradient(135deg, rgba(230, 57, 70, 0.05) 0%, rgba(255, 107, 129, 0.05) 100%)',
+          background: 'var(--bg-secondary)',
           borderRadius: 16,
           padding: 20,
-          border: '1px solid rgba(230, 57, 70, 0.1)',
+          border: '1px solid var(--border-light)',
         }}
       >
         <div className='d-flex justify-content-between align-items-center'>
@@ -592,19 +595,20 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                 width: 48,
                 height: 48,
                 borderRadius: 12,
-                background: 'rgba(230, 57, 70, 0.1)',
+                background: 'var(--bg-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
-              <i className='bi bi-shield-check-fill' style={{ fontSize: 22, color: '#e63946' }}></i>
+              <i className='bi bi-shield-check-fill' style={{ fontSize: 22, color: 'var(--color-black)' }}></i>
             </div>
             <div>
-              <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#111827', marginBottom: 2 }}>
+              <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>
                 Bank-grade Security
               </div>
-              <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
                 Your transactions are encrypted and protected 24/7
               </div>
             </div>
@@ -615,10 +619,10 @@ export default function DashboardPanel({ setActive, transactions = [], balance =
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                background: '#10b981',
+                background: 'var(--color-success)',
               }}
             />
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#059669' }}>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-success)' }}>
               All Systems Operational
             </span>
           </div>

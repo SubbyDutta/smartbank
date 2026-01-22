@@ -4,7 +4,7 @@ import axios from 'axios';
 
 
 const API = axios.create({
- baseURL:  "https://subbybankbackend.onrender.com/api",
+ baseURL:  "http://localhost:8080/api",
 });
 
 

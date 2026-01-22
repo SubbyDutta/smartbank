@@ -1,0 +1,106 @@
+/* Balance Header Component Styles */
+
+.balance-compact-header {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-4);
+  transition: box-shadow var(--transition-base);
+}
+
+.balance-compact-header:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.balance-compact-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.balance-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gradient-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: 1px solid var(--border-light);
+  flex: 1;
+  max-width: 280px;
+}
+
+.balance-indicator:hover {
+  background: var(--bg-secondary);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.balance-text {
+  font-weight: var(--font-bold);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.toggle-icon {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  transition: color var(--transition-fast);
+}
+
+.balance-indicator:hover .toggle-icon {
+  color: var(--color-primary);
+}
+
+.balance-quick-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.balance-details {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+}
+
+.account-info .fw-semibold {
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+@media (max-width: 768px) {
+  .balance-compact-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .balance-indicator {
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .balance-quick-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .balance-quick-actions .btn {
+    flex: 1;
+  }
+}

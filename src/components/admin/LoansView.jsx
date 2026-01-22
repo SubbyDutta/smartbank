@@ -9,7 +9,7 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
 
   useEffect(() => {
     load(page);
-   
+
   }, [page]);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
   const approve = async (id) => {
     if (!window.confirm("Approve this loan request?")) return;
     try {
-      await API.post(`/loan/approve/${id}`);
+      await API.post(`/admin/approve/${id}`);
       await load(page);
     } catch (e) {
       console.error("Approve failed", e);
@@ -35,7 +35,7 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
     }
   };
 
- 
+
   const getTableKeys = () => {
     if (!loans || !loans[0]) return [];
     return Object.keys(loans[0]);
@@ -49,9 +49,9 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className="container-fluid"
-      style={{ margin: "0 auto" }} 
+      style={{ margin: "0 auto" }}
     >
-      
+
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
           <h4 className="fw-bold mb-1">Loan Requests</h4>
@@ -73,7 +73,7 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
         />
       </div>
 
-      
+
       <div
         className="card shadow-sm border-0"
         style={{
@@ -82,7 +82,7 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
           backgroundColor: "#ffffff",
         }}
       >
-        
+
         <div
           className="px-4 py-3 border-bottom"
           style={{ backgroundColor: "#f9fafb", borderColor: "#f3f4f6" }}
@@ -90,7 +90,7 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
           <h6 className="mb-0 fw-semibold">Pending Loan Applications</h6>
         </div>
 
-        
+
         <div className="table-responsive">
           <table
             className="table table-hover align-middle mb-0"
@@ -120,7 +120,11 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
               )}
 
               {filtered.map((l) => (
-                <tr key={l.id}>
+                <motion.tr
+                  key={l.id}
+                  whileHover={{ backgroundColor: "rgba(0,0,0,0.02)" }}
+                  transition={{ duration: 0.1 }}
+                >
                   {tableKeys.map((k) => (
                     <td key={k} className="small">
                       {String(l[k])}
@@ -135,13 +139,13 @@ export default function LoansView({ loans, load, page, setPage, totalPages }) {
                       Approve
                     </button>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        
+
         <div
           className="card-body d-flex justify-content-between align-items-center"
           style={{ borderTop: "1px solid #f3f4f6" }}

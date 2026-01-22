@@ -1,433 +1,369 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import {
   Shield,
-  TrendingUp,
   Zap,
-  Lock,
   CreditCard,
-  Users,
-  CheckCircle,
-  ArrowRight,
   BarChart3,
   Wallet,
+  Lock,
+  ArrowRight,
+  ChevronRight,
   Globe,
+  Smartphone,
+  CheckCircle2,
+  Activity
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import "./LandingPage.css";
 
-const features = [
-  { icon: Shield, title: "Advanced Fraud Detection", desc: "AI-powered security monitors every transaction in real-time.", color: "#ef4444" },
-  { icon: Zap, title: "Instant Transfers", desc: "Send money instantly to anyone, anywhere with zero delays.", color: "#f59e0b" },
-  { icon: CreditCard, title: "Smart Loan Management", desc: "Apply for loans and manage repayments seamlessly.", color: "#8b5cf6" },
-  { icon: BarChart3, title: "Real-time Analytics", desc: "Track spending patterns with detailed insights.", color: "#3b82f6" },
-  { icon: Wallet, title: "Digital Wallet", desc: "Store and manage your money securely.", color: "#10b981" },
-  { icon: Lock, title: "Bank-Grade Security", desc: "Military-grade encryption protects your data.", color: "#ec4899" },
-];
+// --------------------------------------------------------------------------
+// OPTIMIZED PIXEL GRID (Memoized to prevent unnecessary re-renders)
+// --------------------------------------------------------------------------
+const PixelGrid = React.memo(() => {
+  const [activeDots, setActiveDots] = useState([]);
 
-const stats = [
-  { label: "Active Users", value: "5.2M+", icon: Users },
-  { label: "Daily Transactions", value: "12.5M+", icon: TrendingUp },
-  { label: "Security Score", value: "99.9%", icon: Shield },
-  { label: "Countries", value: "150+", icon: Globe },
-];
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newDots = Array.from({ length: 6 }, () => ({
+        x: Math.floor(Math.random() * 20),
+        y: Math.floor(Math.random() * 20),
+        id: Math.random()
+      }));
+      setActiveDots(newDots);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
 
-const benefits = [
-  "Zero hidden fees", "24/7 customer support", "Instant account setup",
-  "Multi-currency support", "Mobile & web access", "Automated bill payments"
-];
+  return (
+    <div style={{
+      position: 'relative', width: '100%', height: '100%',
+      display: 'grid', gridTemplateColumns: 'repeat(20, 1fr)', gridTemplateRows: 'repeat(20, 1fr)',
+      gap: '4px', padding: '20px', background: 'rgba(139, 92, 246, 0.03)',
+      borderRadius: '32px', border: '1px solid rgba(139, 92, 246, 0.1)', overflow: 'hidden'
+    }}>
+      {Array.from({ length: 20 }).map((_, i) => (
+        <React.Fragment key={i}>
+          <div style={{ position: 'absolute', top: `${(i + 1) * 5}%`, left: 0, right: 0, height: '1px', background: 'rgba(0,0,0,0.03)' }} />
+          <div style={{ position: 'absolute', left: `${(i + 1) * 5}%`, top: 0, bottom: 0, width: '1px', background: 'rgba(0,0,0,0.03)' }} />
+        </React.Fragment>
+      ))}
+      {activeDots.map(dot => (
+        <motion.div
+          key={dot.id}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0] }}
+          transition={{ duration: 1.2 }}
+          style={{ gridColumn: dot.x + 1, gridRow: dot.y + 1, background: 'var(--color-render-purple)', borderRadius: '2px', boxShadow: '0 0 10px var(--color-render-purple)', zIndex: 1 }}
+        />
+      ))}
+      {Array.from({ length: 400 }).map((_, i) => (
+        <div key={i} style={{ width: '2px', height: '2px', background: 'rgba(0,0,0,0.05)', borderRadius: '50%' }} />
+      ))}
+    </div>
+  );
+});
+
+// --------------------------------------------------------------------------
+// NEW: LIVE TRANSACTION FEED COMPONENT
+// --------------------------------------------------------------------------
+const LiveFeed = () => {
+  const [items, setItems] = useState([
+    { id: 1, type: 'Transfer', amount: '+$540.00', status: 'Success', user: 'Jane D.' },
+    { id: 2, type: 'Security', amount: 'Blocked', status: 'Threat', user: 'Unknown IP' },
+  ]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const types = ['Transfer', 'Security', 'Payment', 'Login'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const newItem = {
+        id: Date.now(),
+        type,
+        amount: type === 'Security' ? 'Secured' : `+$${(Math.random() * 1000).toFixed(2)}`,
+        status: type === 'Security' ? 'Protected' : 'Success',
+        user: type === 'Security' ? 'System Audit' : 'User Auth'
+      };
+      setItems(prev => [newItem, ...prev.slice(0, 2)]);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AnimatePresence initial={false}>
+        {items.map(item => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, x: 20, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            style={{
+              padding: '16px 20px', borderRadius: 16, background: '#fff',
+              border: item.type === 'Security' ? '1px solid #fee2e2' : '1px solid rgba(0,0,0,0.05)',
+              boxShadow: '0 10px 20px -10px rgba(0,0,0,0.05)',
+              display: 'flex', alignItems: 'center', gap: 16
+            }}
+          >
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: item.type === 'Security' ? '#fef2f2' : 'var(--color-render-purple-soft)',
+              color: item.type === 'Security' ? '#ef4444' : 'var(--color-render-purple)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              {item.type === 'Security' ? <Shield size={18} /> : <Activity size={18} />}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 800 }}>{item.type}</div>
+              <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600 }}>{item.user}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: item.type === 'Security' ? '#ef4444' : '#10b981' }}>{item.amount}</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.5 }}>{item.status}</div>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const FeatureCard = ({ icon: Icon, title, desc, delay, tag }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ delay, duration: 0.6 }}
+    style={{
+      background: '#fff', padding: '40px', borderRadius: '32px',
+      border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.04)',
+      display: 'flex', flexDirection: 'column', height: '100%'
+    }}
+    whileHover={{ y: -10, boxShadow: '0 30px 60px -20px rgba(0,0,0,0.1)', borderColor: 'var(--color-render-purple)' }}
+  >
+    <div style={{
+      width: 56, height: 56, borderRadius: '16px',
+      background: 'var(--color-render-purple-soft)', color: 'var(--color-render-purple)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28
+    }}>
+      <Icon size={28} />
+    </div>
+    {tag && (
+      <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--color-render-purple)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 12 }}>{tag}</span>
+    )}
+    <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: 16, color: '#000' }}>{title}</h3>
+    <p style={{ color: '#666', lineHeight: 1.6, fontSize: '1.05rem' }}>{desc}</p>
+  </motion.div>
+);
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
+  const { scrollY } = useScroll();
 
- 
+  // PERFORMANCE: useSpring for smoother scroll-based scaling/transforms
+  const scrollSpring = useSpring(scrollY, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const heroScale = useTransform(scrollSpring, [0, 500], [1, 0.94]);
+  const heroOpacity = useTransform(scrollSpring, [0, 300], [1, 0]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-
     try {
       const payload = jwtDecode(token);
-      const username =
-        payload?.sub ||
-        payload?.username ||
-        payload?.user ||
-        payload?.name ||
-        "User";
-
-      setUser({ username });
+      setUser({ username: payload?.sub || payload?.username || "User" });
     } catch (e) {
-      console.error("Invalid token on landing:", e);
       localStorage.removeItem("token");
       setUser(null);
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
-    navigate("/login");
-  };
-
-  const handleUserAction = () => {
-    if (user?.username?.toUpperCase() === "ADMIN123") {
-      navigate("/admin");
-    } else {
-      navigate("/user");
-    }
-  };
-
-  const handleCreateAccount = () => {
+  const handleAction = () => {
     if (user) {
-      handleUserAction();
+      navigate(user.username.toUpperCase() === "ADMIN123" ? "/admin" : "/user");
     } else {
       navigate("/signup");
     }
   };
 
-  const Section = ({ children, className = "", ...props }) => (
-    <section className={`landing-section ${className}`} {...props}>{children}</section>
-  );
-
-  const GradientText = ({ children }) => (
-    <span style={{
-      background: "linear-gradient(135deg, #ff6b81 0%, #e63946 100%)",
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
-      backgroundClip: "text",
-    }}>{children}</span>
-  );
-
   return (
-    <div className="landing-page">
-     
-      <motion.nav
-        className="landing-nav"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="nav-brand">
-          <div className="brand-icon">S</div>
-          <GradientText><strong>SecureBank</strong></GradientText>
+    <div className="landing-page" style={{ background: '#fff', minHeight: '100vh', color: '#000', fontFamily: 'var(--font-sans)', overflowX: 'hidden' }}>
+
+      <div className="bg-grid" style={{ opacity: 0.3 }} />
+
+      {/* Navbar - CLEANED UP */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: 80,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1000, background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(32px)',
+        borderBottom: '1px solid rgba(0,0,0,0.04)'
+      }}>
+        <div style={{ width: '100%', maxWidth: 1200, padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 18 }}>S</div>
+            <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.8px' }}>SecureBank</span>
+          </div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {!user ? (
+              <>
+                <button onClick={() => navigate("/login")} style={{ background: 'transparent', border: 'none', color: '#000', fontWeight: 700, cursor: 'pointer', padding: '10px 20px', fontSize: '0.95rem' }}>Log In</button>
+                <button onClick={handleAction} style={{ background: '#000', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 50, fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>Get Started</button>
+              </>
+            ) : (
+              <button onClick={handleAction} style={{ background: '#000', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 50, fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>Dashboard <ArrowRight size={16} style={{ display: 'inline', marginLeft: 8 }} /></button>
+            )}
+          </div>
         </div>
+      </nav>
 
-        <div className="nav-actions">
-          {!user ? (
-            <>
-              
-              <motion.button
-                className="btn-outline"
-                onClick={() => navigate("/login")}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Login
-              </motion.button>
-              <motion.button
-                className="btn-gradient"
-                onClick={handleCreateAccount}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Get Started
-              </motion.button>
-            </>
-          ) : (
-            <>
-             
-              <motion.button
-                className="btn-outline"
-                onClick={handleUserAction}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {user.username}
-              </motion.button>
-             
-              <motion.button
-                className="btn-gradient"
-                onClick={handleLogout}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Logout
-              </motion.button>
-            </>
-          )}
-        </div>
-      </motion.nav>
-
-      
-      <Section className="hero-section">
-        <div className="hero-grid">
-          <motion.div
-            className="hero-content"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <motion.div
-              className="hero-badge"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Shield size={18} />
-              Trusted by 5M+ Users Worldwide
-            </motion.div>
-
-            <h1><GradientText>Banking Made Simple, Secure & Smart</GradientText></h1>
-
-            <p className="hero-description">
-              Experience the future of digital banking with advanced fraud detection, 
-              instant transfers, and complete financial control at your fingertips.
-            </p>
-
-            <div className="hero-buttons">
-              <motion.button
-                className="btn-gradient btn-large"
-                onClick={handleCreateAccount}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Open Free Account <ArrowRight size={20} />
-              </motion.button>
-
-              <motion.button
-                className="btn-outline btn-large"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Learn More
-              </motion.button>
-            </div>
-
-            <div className="trust-indicators">
-              {[
-                { icon: Shield, text: "Bank-Grade Security" },
-                { icon: Zap, text: "Instant Processing" },
-                { icon: CheckCircle, text: "99.9% Uptime" },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  className="trust-item"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                >
-                  <item.icon size={20} color="#10b981" />
-                  <span>{item.text}</span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="hero-visual"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <motion.div
-              className="hero-card"
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="card-balance">
-                <div className="balance-label">Total Balance</div>
-                <div className="balance-amount">₹1,24,567.89</div>
-              </div>
-              
-              <div className="card-stats">
-                <div className="stat-box">
-                  <div>Income</div>
-                  <strong>₹45,890</strong>
-                </div>
-                <div className="stat-box">
-                  <div>Expenses</div>
-                  <strong>₹23,450</strong>
-                </div>
-              </div>
-
-              <div className="card-account">
-                <div>
-                  <div>Account Number</div>
-                  <strong>•••• •••• 4567</strong>
-                </div>
-                <CreditCard size={32} style={{ opacity: 0.8 }} />
-              </div>
-            </motion.div>
-
-            {/* Floating Elements */}
-            <FloatingCard delay={0.5} position="top-right">
-              <div className="floating-icon" style={{ background: "linear-gradient(135deg, #34d399 0%, #10b981 100%)" }}>
-                <TrendingUp size={24} color="#fff" />
-              </div>
-              <div>
-                <div className="floating-label">Growth</div>
-                <div className="floating-value" style={{ color: "#10b981" }}>+24.5%</div>
-              </div>
-            </FloatingCard>
-
-            <FloatingCard delay={1} position="bottom-left">
-              <div className="floating-icon" style={{ background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)" }}>
-                <Zap size={24} color="#fff" />
-              </div>
-              <div>
-                <div className="floating-label">Instant</div>
-                <div className="floating-value">Transfer</div>
-              </div>
-            </FloatingCard>
-          </motion.div>
-        </div>
-      </Section>
-
-      
-      <Section className="stats-section">
-        <div className="stats-grid">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              className="stat-card"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-            >
-              <stat.icon size={40} color="#e63946" />
-              <div className="stat-value"><GradientText>{stat.value}</GradientText></div>
-              <div className="stat-label">{stat.label}</div>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-     
-      <Section>
-        <motion.div
-          className="section-header"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2><GradientText>Everything You Need</GradientText></h2>
-          <p>Powerful features designed to give you complete control over your finances</p>
+      {/* Hero Section - UPDATED TO 2-COL WITH LIVE FEED */}
+      <section style={{
+        paddingTop: 180, paddingBottom: 100, paddingLeft: 24, paddingRight: 24,
+        maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 480px)', gap: 80, alignItems: 'center'
+      }}>
+        <motion.div style={{ scale: heroScale, opacity: heroOpacity }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10, padding: '8px 16px', borderRadius: 99,
+            background: 'var(--color-render-purple-soft)', color: 'var(--color-render-purple)',
+            fontSize: '0.9rem', fontWeight: 800, marginBottom: 32, border: '1px solid rgba(139, 92, 246, 0.2)'
+          }}>
+            <Smartphone size={16} /> NEW: MOBILE P2P TRANSFERS
+          </div>
+          <h1 style={{ fontSize: '5.5rem', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-4px', marginBottom: 32, color: '#000' }}>
+            Banking.<br />
+            Built for<br />
+            <span style={{ color: 'var(--color-render-purple)' }}>Tomorrow.</span>
+          </h1>
+          <p style={{ fontSize: '1.4rem', color: '#555', lineHeight: 1.4, marginBottom: 48, maxWidth: 540, fontWeight: 500 }}>
+            The fastest, most secure way to manage your financial infrastructure. Experience instant global settlements and AI-driven protection.
+          </p>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <button onClick={handleAction} style={{ height: 64, padding: '0 40px', fontSize: '1.15rem', background: '#000', color: '#fff', borderRadius: 50, border: 'none', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)' }}>
+              Open Account <ArrowRight size={22} />
+            </button>
+          </div>
         </motion.div>
 
-        <div className="features-grid">
-          {features.map((feature, i) => (
+        {/* Right Column: GRID + LIVE FEED */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          style={{ height: 560, position: 'relative' }}
+        >
+          <PixelGrid />
+
+          <div style={{ position: 'absolute', inset: 32, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 24, zIndex: 2 }}>
+            <LiveFeed />
+
+            {/* Large Stat Box Overlay */}
             <motion.div
-              key={i}
-              className="feature-card"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -10, boxShadow: `0 20px 40px ${feature.color}30` }}
-              style={{ borderColor: `${feature.color}20` }}
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+              style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', padding: 32, borderRadius: 24, border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 40px 80px rgba(0,0,0,0.1)' }}
             >
-              <div className="feature-icon" style={{ background: `linear-gradient(135deg, ${feature.color}80, ${feature.color})` }}>
-                <feature.icon size={32} color="#fff" />
+              <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#999', letterSpacing: '2px', marginBottom: 12 }}>SYSTEM INTEGRITY</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '-1px' }}>100% SECURE</div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <div style={{ flex: 1, height: 4, background: '#10b981', borderRadius: 2 }} />
+                <div style={{ flex: 1, height: 4, background: '#10b981', borderRadius: 2 }} />
+                <div style={{ flex: 1, height: 4, background: '#10b981', borderRadius: 2 }} />
               </div>
-              <h3>{feature.title}</h3>
-              <p>{feature.desc}</p>
             </motion.div>
-          ))}
-        </div>
-      </Section>
+          </div>
+        </motion.div>
+      </section>
 
-     
-      <Section className="benefits-section">
-        <div className="benefits-grid">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2>Why Choose SecureBank?</h2>
-            <p>Join millions of users who trust us with their financial future. 
-            Experience banking that's built for the modern world.</p>
-          </motion.div>
-
-          <motion.div
-            className="benefits-list"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            {benefits.map((benefit, i) => (
-              <motion.div
-                key={i}
-                className="benefit-item"
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <CheckCircle size={24} />
-                <span>{benefit}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </Section>
-
-     
-      <Section className="cta-section">
-       
-      </Section>
-
-      <footer className="landing-footer">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <div className="brand-icon">S</div>
-            <span><strong>SecureBank</strong></span>
-            <p>The future of digital banking with advanced fraud detection.</p>
+      {/* Product functionalities Section */}
+      <section style={{ padding: '120px 24px', background: '#fafafb', borderTop: '1px solid #f0f0f0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 80 }}>
+            <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: 24, letterSpacing: '-2px' }}>One Bank. Every Feature.</h2>
+            <p style={{ color: '#666', fontSize: '1.25rem', maxWidth: 640, margin: '0 auto', fontWeight: 500, lineHeight: 1.5 }}>Everything you expect from a modern financial platform, and everything you don't. Built with raw performance in mind.</p>
           </div>
 
-          {["Product", "Company", "Support"].map((section, i) => (
-            <div key={i} className="footer-section">
-              <h4>{section}</h4>
-              {["Features", "Security", "Pricing", "API"].map(item => (
-                <a key={item} href="#">{item}</a>
-              ))}
-            </div>
-          ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }}>
+            <FeatureCard icon={Zap} tag="Instant" title="Global P2P" desc="Send assets to anyone, anywhere, instantly. The boundary of geography is now obsolete." delay={0.1} />
+            <FeatureCard icon={Shield} tag="Secure" title="Neural Shield" desc="Autonomous transaction monitoring that evolves with every block. Security that thinks." delay={0.2} />
+            <FeatureCard icon={Wallet} tag="Unified" title="Full Aggregation" desc="Connect all legacy accounts into one stream of truth. Control your entire network." delay={0.3} />
+            <FeatureCard icon={Activity} tag="Deep" title="Flow Analytics" desc="Advanced predictive modeling for your spending habits. See your future, today." delay={0.4} />
+            <FeatureCard icon={CheckCircle2} tag="Verified" title="Bank-Grade" desc="Enterprise-level encryption and full regulatory compliance across all jurisdictions." delay={0.5} />
+            <FeatureCard icon={Smartphone} tag="Mobile" title="Native Experience" desc="A truly mobile-first approach. Manage your empire from the palm of your hand." delay={0.6} />
+          </div>
         </div>
+      </section>
 
-        <div className="footer-bottom">
-          <p>© 2025 SecureBank. All rights reserved.</p>
-          <div className="footer-social">
-            {["Twitter", "LinkedIn", "Facebook"].map(social => (
-              <a key={social} href="#">{social}</a>
-            ))}
+      {/* Expanded How It Works Section */}
+      <section style={{ padding: '140px 24px', maxWidth: 1240, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 120, alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              style={{ background: '#000', borderRadius: 40, padding: 60, color: '#fff', overflow: 'hidden', boxShadow: '0 60px 120px -20px rgba(0,0,0,0.3)' }}
+            >
+              <div style={{ opacity: 0.1, position: 'absolute', inset: 0, background: 'radial-gradient(circle at 70% 30%, var(--color-render-purple) 0%, transparent 100%)' }} />
+              <h3 style={{ fontSize: '3rem', fontWeight: 800, lineHeight: 1, letterSpacing: '-2px', marginBottom: 24 }}>Unified.<br />Universal.</h3>
+              <p style={{ fontSize: '1.2rem', color: '#888', marginBottom: 48, lineHeight: 1.6 }}>The days of fragmented banking are over. SecureBank aggregates every account into one secure, blazing-fast interface.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{ padding: 24, background: 'rgba(255,255,255,0.05)', borderRadius: 20, border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ChevronRight size={18} />
+                    </div>
+                    <div style={{ flex: 1, height: 10, background: 'rgba(255,255,255,0.1)', borderRadius: 5 }} />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+            {/* Floating badge */}
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: 60, border: '1px dashed rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 900, color: '#000', textAlign: 'center' }}>100%<br />CLIENT SIDE</div>
+            </motion.div>
+          </div>
+          <div>
+            <h2 style={{ fontSize: '4rem', fontWeight: 900, marginBottom: 32, letterSpacing: '-3px', lineHeight: 1 }}>Seamlessly Sync Every Account.</h2>
+            <p style={{ fontSize: '1.3rem', color: '#555', lineHeight: 1.6, marginBottom: 48 }}>
+              Leverage our proprietary aggregation technology to connect any financial institution in seconds. No more siloed data. Just pure clarity.
+            </p>
+            <button onClick={handleAction} style={{ padding: '0 40px', height: 60, background: '#000', color: '#fff', borderRadius: 50, border: 'none', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+              Start Aggregating <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Global Footer */}
+      <footer style={{ padding: '100px 24px 60px', borderTop: '1px solid #f0f0f0', background: '#fff' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 80 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>S</div>
+              <span style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-0.8px' }}>SecureBank</span>
+            </div>
+            <p style={{ color: '#777', fontSize: '1rem', lineHeight: 1.6, maxWidth: 360 }}>
+              The world's most advanced financial Operating System. Optimized for the future.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#000', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '1px' }}>Global Network</span>
+            <span style={{ color: '#777', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer' }}>Status</span>
+            <span style={{ color: '#777', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer' }}>Documentation</span>
+            <span style={{ color: '#777', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer' }}>API Reference</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#000', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '1px' }}>Platform</span>
+            <span style={{ color: '#777', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer' }}>Twitter</span>
+            <span style={{ color: '#777', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer' }}>GitHub</span>
+            <span style={{ color: '#777', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer' }}>Discord</span>
+          </div>
+        </div>
+        <div style={{ maxWidth: 1200, margin: '60px auto 0', paddingTop: 40, borderTop: '1px solid #f5f5f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: '0.85rem', color: '#bbb', fontWeight: 600 }}>&copy; 2026 SecureBank V7. All rights reserved.</div>
+          <div style={{ display: 'flex', gap: 24, fontSize: '0.85rem', color: '#bbb', fontWeight: 600 }}>
+            <span style={{ cursor: 'pointer' }}>Privacy Policy</span>
+            <span style={{ cursor: 'pointer' }}>Terms of Service</span>
           </div>
         </div>
       </footer>
     </div>
-  );
-}
-
-function FloatingCard({ children, delay, position }) {
-  const positions = {
-    "top-right": { top: "10%", right: "-10%" },
-    "bottom-left": { bottom: "5%", left: "-10%" }
-  };
-
-  return (
-    <motion.div
-      className="floating-card"
-      style={positions[position]}
-      animate={{ 
-        y: position === "top-right" ? [0, -20, 0] : [0, 20, 0],
-        rotate: position === "top-right" ? [0, 5, 0] : [0, -5, 0]
-      }}
-      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay }}
-    >
-      {children}
-    </motion.div>
   );
 }

@@ -6,7 +6,7 @@ import { Shield, Menu, X, LogOut } from "lucide-react";
 const SIDEBAR_WIDTH = 280;
 
 export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
-  const ACCENT_COLOR = "#e63946"; 
+  const ACCENT_COLOR = "var(--color-black)";
 
   return (
     <motion.header
@@ -19,18 +19,18 @@ export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
         left: sidebarOpen ? SIDEBAR_WIDTH : 0,
         right: 0,
         zIndex: 1500,
-        backgroundColor: "#ffffff",
-        borderBottom: "1px solid #f1f5f9",
+        backgroundColor: "var(--bg-primary)",
+        borderBottom: "1px solid var(--border-light)",
         minHeight: "72px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "0 24px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        boxShadow: "var(--shadow-sm)",
         transition: "left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-     
+
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <motion.button
           onClick={toggleSidebar}
@@ -39,7 +39,7 @@ export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
           style={{
             background: "transparent",
             border: "none",
-            color: "#6b7280",
+            color: "var(--text-secondary)",
             cursor: "pointer",
             padding: "8px",
             borderRadius: 8,
@@ -63,12 +63,12 @@ export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
               width: 40,
               height: 40,
               borderRadius: "50%",
-              background: `linear-gradient(135deg, ${ACCENT_COLOR}, #f87171)`,
+              background: "var(--color-black)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "#fff",
-              boxShadow: `0 4px 12px rgba(230, 57, 70, 0.3)`,
+              boxShadow: "var(--shadow-primary)",
             }}
           >
             <Shield size={18} />
@@ -76,22 +76,23 @@ export default function AdminHeader({ sidebarOpen, toggleSidebar, onLogout }) {
           <div>
             <h5
               style={{
-                color: "#1f2937",
-                fontWeight: 600,
+                color: "var(--text-primary)",
+                fontWeight: 800,
                 margin: 0,
                 fontSize: "1.1rem",
+                letterSpacing: '-0.5px'
               }}
             >
-             SMARTBANK
+              SECUREBANK
             </h5>
-            <div style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 500 }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-tertiary)", fontWeight: 500 }}>
               Banking Management
             </div>
           </div>
         </motion.div>
       </div>
 
-  
+
     </motion.header>
   );
 }

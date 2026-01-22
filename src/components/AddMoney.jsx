@@ -53,7 +53,7 @@ export default function AddMoney({ onSuccess }) {
               const decoded = jwtDecode(token);
               username = decoded.sub;
             }
-             const key = uuidv4();
+            const key = uuidv4();
             const verifyRes = await API.post("/payment/verify", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -80,7 +80,7 @@ export default function AddMoney({ onSuccess }) {
           email: "demo@example.com",
           contact: "9999999999",
         },
-        theme: { color: "#e63946" },
+        theme: { color: "#000000" },
       };
 
       const paymentObject = new window.Razorpay(options);
@@ -120,7 +120,7 @@ export default function AddMoney({ onSuccess }) {
       animate="visible"
       variants={cardVariants}
     >
-    
+
       <div
         style={{
           position: "absolute",
@@ -128,13 +128,13 @@ export default function AddMoney({ onSuccess }) {
           left: 0,
           right: 0,
           height: 4,
-        
+
           opacity: 0.8,
         }}
       />
 
       <div style={{ position: "relative", zIndex: 2 }}>
-      
+
         <div className="text-center mb-4">
           <div className="d-inline-block mb-3">
             <div
@@ -142,14 +142,14 @@ export default function AddMoney({ onSuccess }) {
                 width: 64,
                 height: 64,
                 borderRadius: 16,
-                background: "linear-gradient(135deg, #ff6b81 0%, #e63946 100%)",
+                background: "var(--color-black)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#fff",
+                color: "var(--text-inverse)",
                 fontSize: 28,
                 margin: "0 auto",
-                boxShadow: "0 8px 20px rgba(230,57,70,0.3)",
+                boxShadow: "var(--shadow-lg)",
               }}
             >
               <i className="bi bi-wallet2"></i>
@@ -158,10 +158,7 @@ export default function AddMoney({ onSuccess }) {
           <h4
             className="fw-bold mb-2"
             style={{
-              background: "linear-gradient(135deg, #ff6b81 0%, #e63946 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              color: "var(--text-primary)",
             }}
           >
             Add Money to Wallet
@@ -172,7 +169,7 @@ export default function AddMoney({ onSuccess }) {
           </p>
         </div>
 
-        
+
         <div className="d-flex justify-content-center mb-4">
           <div style={{
             background: "#fff",
@@ -202,7 +199,7 @@ export default function AddMoney({ onSuccess }) {
           </div>
         </div>
 
-       
+
         <motion.form
           onSubmit={handleAddMoney}
           initial={{ opacity: 0, y: 20 }}
@@ -233,7 +230,7 @@ export default function AddMoney({ onSuccess }) {
                   e.target.style.boxShadow = "0 0 0 3px rgba(230,57,70,0.1)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = "rgba(220,53,69,0.3)";
+                  e.target.style.borderColor = "var(--border-light)";
                   e.target.style.boxShadow = "none";
                 }}
               />
@@ -254,7 +251,7 @@ export default function AddMoney({ onSuccess }) {
             </div>
           </div>
 
-         
+
           <div className="mb-4">
             <label className="form-label fw-semibold mb-2" style={{ fontSize: "0.85rem" }}>
               Quick Amount:
@@ -281,7 +278,7 @@ export default function AddMoney({ onSuccess }) {
             </div>
           </div>
 
-          
+
           <div className="d-flex gap-3">
             <motion.button
               className="btn btn-danger w-100"
@@ -293,9 +290,12 @@ export default function AddMoney({ onSuccess }) {
                 borderRadius: 12,
                 padding: "14px",
                 fontSize: "1rem",
+                background: "var(--color-black)",
+                border: "none",
+                color: "var(--text-inverse)",
               }}
               variants={buttonVariants}
-              
+
               whileTap="tap"
             >
               {loading ? (
@@ -328,20 +328,20 @@ export default function AddMoney({ onSuccess }) {
               whileHover="hover"
               whileTap="tap"
             >
-            
+
               Clear
             </motion.button>
           </div>
 
-         
+
           {msg && typeof msg === 'object' && msg.text && (
             <motion.div
               className="mt-3 alert d-flex align-items-center gap-2 mb-0"
               style={{
                 borderRadius: 12,
                 border: "none",
-                background: msg.type === "success" 
-                  ? "rgba(16,185,129,0.1)" 
+                background: msg.type === "success"
+                  ? "rgba(16,185,129,0.1)"
                   : "rgba(239,68,68,0.1)",
                 color: msg.type === "success" ? "#10b981" : "#ef4444",
                 fontWeight: 600,
@@ -355,7 +355,7 @@ export default function AddMoney({ onSuccess }) {
           )}
         </motion.form>
 
-        
+
         <motion.div
           className="mt-4 pt-3 border-top border-light d-flex align-items-center justify-content-center gap-3 flex-wrap text-muted small"
           initial={{ opacity: 0 }}

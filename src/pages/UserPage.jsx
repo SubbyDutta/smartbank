@@ -63,7 +63,7 @@ export default function UserPage() {
         setHasAccount(true);
         setAccountNumber(acct);
         await fetchBalance();
-        await fetchTransactions({ username, page: 0, size: 20 });
+        await fetchTransactions({ username, page: 0, size: 10 });
       } else {
         setHasAccount(false);
         setAccountNumber('');
@@ -103,7 +103,7 @@ export default function UserPage() {
     const {
       username = user.username,
       page = 0,
-      size = 20,
+      size = 10,
       from,
       to,
       minAmount,
@@ -227,19 +227,25 @@ export default function UserPage() {
 
 
   return (
-    <div className="up-root">
+    <div className="up-root" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="bg-grid" />
       <button
         className="mobile-hamburger"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label="Toggle menu"
+        style={{
+          left: sidebarOpen ? 290 : 20,
+          transition: 'left 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
       >
-        <i className={`bi ${sidebarOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
+        <i className={`bi ${sidebarOpen ? 'bi-chevron-left' : 'bi-list'}`}></i>
       </button>
 
       {sidebarOpen && (
         <div
           className="mobile-overlay"
           onClick={() => setSidebarOpen(false)}
+          style={{ background: 'var(--bg-backdrop)' }}
         />
       )}
 
@@ -248,7 +254,7 @@ export default function UserPage() {
         active={active}
         setActive={(view) => {
           guardedSetActive(view);
-          setSidebarOpen(false);
+          if (window.innerWidth <= 768) setSidebarOpen(false);
         }}
         logout={logout}
         hasAccount={hasAccount}
@@ -257,59 +263,114 @@ export default function UserPage() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="up-main">
+      <main className="up-main" style={{
+        marginLeft: sidebarOpen ? 280 : 0,
+        transition: 'margin-left 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+        width: sidebarOpen ? 'calc(100% - 280px)' : '100%',
+      }}>
         <div className="up-panels">
+          <AnimatePresence mode="wait">
             {active === 'dashboard' && hasAccount && (
-              <DashboardPanel
-                setActive={guardedSetActive}
-                transactions={transactions}
-                balance={balanceRaw}
-              />
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <DashboardPanel
+                  setActive={(view) => {
+                    if (view === 'addMoney') {
+                      setActive('transfer');
+                    } else {
+                      guardedSetActive(view);
+                    }
+                  }}
+                  transactions={transactions}
+                  balance={balanceRaw}
+                />
+              </motion.div>
             )}
 
             {active === 'transfer' && hasAccount && (
-              <TransferPanel
-                onComplete={() => {
-                  fetchBalance();
-                  fetchTransactions({ username: user.username, page: 0 });
-                  guardedSetActive("tx");
-                }}
-              />
+              <motion.div
+                key="transfer"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <TransferPanel
+                  accountNumber={accountNumber}
+                  onComplete={() => {
+                    fetchBalance();
+                    fetchTransactions({ username: user.username, page: 0 });
+                  }}
+                />
+              </motion.div>
             )}
 
             {active === 'tx' && hasAccount && (
-              <TransactionsPanel
-                transactions={transactions}
-                loading={txLoading}
-                balance={balanceRaw}
-                onReload={(params) =>
-                  fetchTransactions({ username: user.username, ...params })
-                }
-              />
+              <motion.div
+                key="tx"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <TransactionsPanel
+                  transactions={transactions}
+                  loading={txLoading}
+                  balance={balanceRaw}
+                  onReload={(params) =>
+                    fetchTransactions({ username: user.username, ...params })
+                  }
+                />
+              </motion.div>
             )}
 
-            {active === 'addMoney' && hasAccount && (
-              <AddMoney
-                onSuccess={() => {
-                  fetchBalance();
-                  fetchTransactions({ username: user.username });
-                  guardedSetActive("dashboard");
-                }}
-              />
-            )}
 
             {active === 'loan' && hasAccount && (
-              <LoanPanel
-                onLoanApplied={() => {
-                  fetchBalance();
-                  fetchTransactions({ username: user.username });
-                }}
-              />
+              <motion.div
+                key="loan"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <LoanPanel
+                  onLoanApplied={() => {
+                    fetchBalance();
+                    fetchTransactions({ username: user.username });
+                  }}
+                />
+              </motion.div>
             )}
 
-            {active === 'myloan' && hasAccount && <LoanRepaymentPanel />}
+            {active === 'myloan' && hasAccount && (
+              <motion.div
+                key="myloan"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <LoanRepaymentPanel />
+              </motion.div>
+            )}
 
-            {active === 'chatbot' && <ChatbotPanel />}
+            {active === 'chatbot' && (
+              <motion.div
+                key="chatbot"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChatbotPanel />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
@@ -317,6 +378,7 @@ export default function UserPage() {
         {!hasAccount && (
           <motion.div
             key="create-account-overlay"
+            className="create-account-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -328,7 +390,7 @@ export default function UserPage() {
               alignItems: 'center',
               justifyContent: 'center',
               zIndex: 4000,
-              backdropFilter: 'blur(8px)',
+              backdropFilter: 'blur(12px)',
               padding: '1.5rem',
             }}
           >
@@ -336,46 +398,25 @@ export default function UserPage() {
               initial={{ y: 40, opacity: 0, scale: 0.95 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 20, opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3, type: 'spring' }}
-              className="card shadow-lg"
+              transition={{ duration: 0.35, type: 'spring', stiffness: 300 }}
+              className="card shadow-lg create-account-card"
               style={{
                 width: '100%',
                 maxWidth: 560,
                 borderRadius: 24,
-                border: '1px solid rgba(255,255,255,0.1)',
+                border: '1px solid var(--border-light)',
                 overflow: 'hidden',
-                background: '#fff',
+                background: 'var(--bg-primary)',
               }}
             >
-              <div
-                style={{
-                  padding: '1.25rem 1.5rem',
-                  background: 'linear-gradient(135deg, #ff6b81 0%, #e63946 100%)',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '0.75rem',
-                }}
-              >
+              <div className="create-account-header">
                 <div>
                   <h5 className="mb-1 fw-bold">Create Your Account</h5>
                   <div style={{ fontSize: 13, opacity: 0.95 }}>
                     Get started with SecureBank in minutes
                   </div>
                 </div>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    background: 'rgba(255,255,255,0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 20,
-                  }}
-                >
+                <div className="create-account-header-icon">
                   <i className="bi bi-bank"></i>
                 </div>
               </div>
@@ -468,9 +509,9 @@ export default function UserPage() {
                 <div
                   className="p-3 mb-3"
                   style={{
-                    background: 'rgba(230,57,70,0.05)',
+                    background: 'var(--bg-secondary)',
                     borderRadius: 12,
-                    border: '1px solid rgba(230,57,70,0.1)',
+                    border: '1px solid var(--border-light)',
                   }}
                 >
                   <div className="d-flex align-items-start gap-2">
@@ -489,10 +530,9 @@ export default function UserPage() {
                   </div>
 
                   <button
-                    className="btn btn-danger px-4 py-2"
+                    className="btn btn-primary px-4 py-2 create-account-btn"
                     disabled={creatingAccount}
                     onClick={handleCreateAccount}
-                    style={{ borderRadius: 12, fontWeight: 600 }}
                   >
                     {creatingAccount ? (
                       <>

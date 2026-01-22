@@ -17,7 +17,7 @@ export default function AccountsView({
 
   useEffect(() => {
     load(page);
-  
+
   }, [page]);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function AccountsView({
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this bank account?")) return;
-    
+
     setLoading(true);
     setActionError("");
     try {
@@ -78,7 +78,7 @@ export default function AccountsView({
 
   const handleToggleBlock = async (id, currentBlocked) => {
     if (!window.confirm(`Toggle block status for this account? ${currentBlocked ? "(Will activate)" : "(Will block)"}`)) return;
-    
+
     setLoading(true);
     setActionError("");
     try {
@@ -100,7 +100,7 @@ export default function AccountsView({
       className="container-fluid"
       style={{ margin: "0 auto" }}
     >
-      
+
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
           <h4 className="fw-bold mb-1" style={{ color: "#111827" }}>
@@ -124,7 +124,7 @@ export default function AccountsView({
         />
       </div>
 
-     
+
       {actionError && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           {actionError}
@@ -143,7 +143,7 @@ export default function AccountsView({
         </div>
       )}
 
-      
+
       <div
         className="card shadow-sm border-0"
         style={{
@@ -152,7 +152,7 @@ export default function AccountsView({
           backgroundColor: "#ffffff",
         }}
       >
-        
+
         <div
           className="px-4 py-3 border-bottom"
           style={{
@@ -202,9 +202,9 @@ export default function AccountsView({
                     style={
                       blocked
                         ? {
-                            backgroundColor: "#fef2f2",
-                            borderLeft: "4px solid #dc2626"
-                          }
+                          backgroundColor: "#fef2f2",
+                          borderLeft: "4px solid #dc2626"
+                        }
                         : {}
                     }
                   >
@@ -218,14 +218,14 @@ export default function AccountsView({
                       {a.username || a.userName || "—"}
                     </td>
 
-                   
+
                     <td className="small">
                       <span style={getStatusBadgeStyle(blocked)}>
                         {blocked ? "Blocked" : "Active"}
                       </span>
                     </td>
 
-                    
+
                     <td>
                       <div className="btn-group btn-group-sm" role="group">
                         <button
@@ -269,7 +269,7 @@ export default function AccountsView({
           </table>
         </div>
 
-        
+
         <div
           className="card-body d-flex justify-content-between align-items-center"
           style={{ borderTop: "1px solid #f3f4f6" }}

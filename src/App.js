@@ -7,20 +7,21 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import UserPage from "./pages/UserPage";
 import AdminDashboard from "./AdminDashBoard";
-import ProtectedRoute from "./ProtectecRoute"; 
+import ProtectedRoute from "./ProtectecRoute";
+import PublicRoute from "./PublicRoute";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
 
-        
+        <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+        <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+        <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+
+
         <Route
           path="/admin"
           element={
@@ -38,7 +39,7 @@ export default function App() {
           }
         />
 
-       
+
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

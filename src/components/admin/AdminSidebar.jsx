@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, LayoutGroup } from "framer-motion";
 import {
     Home,
     CreditCard,
@@ -7,9 +7,9 @@ import {
     Wallet,
     FileText,
     DollarSign,
-    Search,
     LogOut,
     User,
+    ScrollText,
 } from "lucide-react";
 
 const SIDEBAR_WIDTH = 280;
@@ -29,10 +29,8 @@ export default function AdminSidebar({
 }) {
     const handleKeyPress = (e) => e.key === "Enter" && onSearchUser();
 
-    const ACCENT_COLOR = "#e63946"; 
-    const sidebarBg = "#ffffff"; 
-    const itemBg = "#f8f9fa";
-    const inactiveTextColor = "#1f2937"; 
+    // Refactored to use Design Tokens
+    const isActive = (key) => active === key;
 
     const navItems = [
         { key: "home", label: "Dashboard", icon: Home, onClick: () => setActive("home") },
@@ -41,6 +39,7 @@ export default function AdminSidebar({
         { key: "users", label: "User Management", icon: Users, onClick: onUsers },
         { key: "accounts", label: "Accounts Overview", icon: Wallet, onClick: onAccounts },
         { key: "repayments", label: "Loan Repayments", icon: FileText, onClick: () => setActive("repayments") },
+        { key: "audit", label: "Audit Logs", icon: ScrollText, onClick: () => setActive("audit") },
     ];
 
     const sidebarVariants = {
@@ -48,7 +47,7 @@ export default function AdminSidebar({
         visible: {
             opacity: 1,
             x: 0,
-            transition: { duration: 0.3 },
+            transition: { duration: 0.5, staggerChildren: 0.05, ease: [0.22, 1, 0.36, 1] },
         },
     };
 
@@ -60,84 +59,16 @@ export default function AdminSidebar({
         padding: "24px",
         width: SIDEBAR_WIDTH,
         minWidth: SIDEBAR_WIDTH,
-        background: sidebarBg,
-        boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
+        background: "var(--bg-primary)",
+        boxShadow: "var(--shadow-xl)",
         borderRadius: 0,
-        borderRight: "1px solid #e5e7eb",
+        borderRight: "1px solid var(--border-light)",
         position: "fixed",
         top: 0,
         left: 0,
         bottom: 0,
         zIndex: 2000,
-        color: inactiveTextColor,
-    };
-
-    const NavItem = ({ item }) => {
-        const isActive = active === item.key;
-
-        return (
-            <motion.button
-                key={item.key}
-                className={`up-btn ${isActive ? "active" : ""}`}
-                onClick={item.onClick}
-                style={{
-                    padding: "12px 16px",
-                    borderRadius: 12,
-                    background: isActive ? ACCENT_COLOR : "transparent",
-                    color: isActive ? "#fff" : inactiveTextColor,
-                    fontWeight: 600,
-                    fontSize: 14,
-                    border: "none",
-                    cursor: "pointer",
-                    
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    textAlign: "left",
-                    position: "relative",
-                }}
-               whileHover={
-  isActive
-    ? {}
-    : {
-        x: 6,
-        backgroundColor: ACCENT_COLOR,
-        color: "#fff",
-        boxShadow: `0 6px 12px ${ACCENT_COLOR}70`,
-        transition: {
-          duration: 0.45, 
-          ease: "easeInOut",
-        },
-      }
-}transition={{
-  type: "tween",
-  duration: 0.45,
-  ease: "easeInOut",
-}}
-whileTap={{ scale: 0.97 }}
-            >
-                <item.icon size={18} style={{ minWidth: 20 }} />
-                <span style={{ flex: 1 }}>{item.label}</span>
-
-                {isActive && (
-                    <motion.div
-                        style={{
-                            position: "absolute",
-                            left: 0,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            width: 4,
-                            height: "70%",
-                            background: "#fff",
-                            borderRadius: "0 4px 4px 0",
-                        }}
-                        initial={{ opacity: 0, scaleY: 0 }}
-                        animate={{ opacity: 1, scaleY: 1 }}
-                        transition={{ duration: 0.2 }}
-                    />
-                )}
-            </motion.button>
-        );
+        color: "var(--text-secondary)",
     };
 
     return (
@@ -148,53 +79,55 @@ whileTap={{ scale: 0.97 }}
             variants={sidebarVariants}
         >
             <div>
-                
+                {/* Admin Profile */}
                 <motion.div
                     style={{
                         display: "flex",
                         gap: 16,
                         alignItems: "center",
-                        marginBottom: 32,
-                        paddingBottom: 24,
-                        borderBottom: "1px solid rgba(255,255,255,0.1)",
+                        marginBottom: 36,
+                        paddingBottom: 28,
+                        borderBottom: "1px solid rgba(0,0,0,0.06)", // Subtle divider
                     }}
                     initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
+                    animate={{ opacity: 1, y: 0, transition: { delay: 0.1, duration: 0.5 } }}
                 >
                     <motion.div
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: "50%",
-                        background: ACCENT_COLOR,
-                        color: "#fff",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        fontWeight: 700,
-                        fontSize: 22,
-                        boxShadow: `0 4px 12px ${ACCENT_COLOR}40`,
-                      }}
-                      whileHover={{ scale: 1.05 }}
+                        style={{
+                            width: 52,
+                            height: 52,
+                            borderRadius: "16px",
+                            background: "var(--color-black)",
+                            color: "var(--text-inverse)",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            fontWeight: 700,
+                            fontSize: 22,
+                            boxShadow: "0 8px 20px -4px rgba(0,0,0,0.2)",
+                        }}
+                        whileHover={{ scale: 1.05, rotate: -2 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
                     >
-                      <User size={24} />
+                        <User size={24} />
                     </motion.div>
                     <div>
                         <div
                             style={{
                                 fontWeight: 700,
-                                fontSize: 17,
-                                color: inactiveTextColor,
+                                fontSize: 16,
+                                color: "var(--text-primary)",
                             }}
                         >
                             {adminUser?.username || "Admin Portal"}
                         </div>
                         <div
                             style={{
-                                fontSize: 12,
-                                color: ACCENT_COLOR,
+                                fontSize: 11,
+                                color: "var(--text-tertiary)",
                                 fontWeight: 600,
                                 textTransform: "uppercase",
+                                letterSpacing: 0.5,
                             }}
                         >
                             Administrator
@@ -202,27 +135,86 @@ whileTap={{ scale: 0.97 }}
                     </div>
                 </motion.div>
 
-               
-                <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {navItems.map((item) => (
-                        <NavItem key={item.key} item={item} />
-                    ))}
-                </nav>
+                {/* Navigation */}
+                <LayoutGroup id="admin-nav">
+                    <nav style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {navItems.map((item) => {
+                            const activeItem = isActive(item.key);
+                            return (
+                                <motion.button
+                                    key={item.key}
+                                    className={`up-btn`}
+                                    onClick={item.onClick}
+                                    style={{
+                                        padding: "12px 16px",
+                                        borderRadius: "var(--radius-md)",
+                                        background: "transparent",
+                                        color: activeItem ? "var(--text-inverse)" : "var(--text-secondary)",
+                                        fontWeight: activeItem ? 600 : 500,
+                                        fontSize: 14,
+                                        border: "none",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 12,
+                                        textAlign: "left",
+                                        position: "relative",
+                                        overflow: "hidden", // Contain inner overflow
+                                    }}
+                                    whileHover={!activeItem ? { x: 4, color: "var(--text-primary)" } : {}}
+                                    whileTap={{ scale: 0.97 }}
+                                >
+                                    {/* Sliding Active Pill */}
+                                    {activeItem && (
+                                        <motion.div
+                                            layoutId="admin-active-pill"
+                                            style={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                background: "var(--color-black)",
+                                                borderRadius: "var(--radius-md)",
+                                                zIndex: -1,
+                                                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                            }}
+                                            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                                        />
+                                    )}
 
-             
+                                    {/* Hover Pill for non-active */}
+                                    {!activeItem && (
+                                        <motion.div
+                                            style={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                background: "var(--bg-tertiary)",
+                                                borderRadius: "var(--radius-md)",
+                                                zIndex: -1,
+                                                opacity: 0,
+                                            }}
+                                            whileHover={{ opacity: 1 }}
+                                        />
+                                    )}
+
+                                    <item.icon size={18} style={{ minWidth: 20, position: 'relative', zIndex: 1 }} />
+                                    <span style={{ flex: 1, position: 'relative', zIndex: 1 }}>{item.label}</span>
+                                </motion.button>
+                            );
+                        })}
+                    </nav>
+                </LayoutGroup>
             </div>
 
-           
+            {/* Logout */}
             <motion.div style={{ marginTop: "auto", paddingTop: 24 }}>
                 <motion.button
                     onClick={onLogout}
                     style={{
                         width: "100%",
                         padding: "12px 0",
-                        borderRadius: 12,
-                        border: `2px solid ${ACCENT_COLOR}40`,
+                        borderRadius: "var(--radius-md)",
+                        border: "1px solid var(--border-color)",
                         background: "transparent",
-                        color: ACCENT_COLOR,
+                        color: "var(--text-secondary)",
                         fontWeight: 600,
                         fontSize: 14,
                         display: "flex",
@@ -231,10 +223,13 @@ whileTap={{ scale: 0.97 }}
                         gap: 8,
                     }}
                     whileHover={{
-                        backgroundColor: ACCENT_COLOR,
-                        color: "#fff",
-                        borderColor: ACCENT_COLOR,
+                        backgroundColor: "var(--bg-secondary)",
+                        color: "var(--color-black)",
+                        borderColor: "var(--color-black)",
+                        scale: 1.02,
                     }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
                     <LogOut size={16} />
                     Logout
