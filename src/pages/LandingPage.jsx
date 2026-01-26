@@ -224,7 +224,7 @@ export default function LandingPage() {
             background: 'var(--color-render-purple-soft)', color: 'var(--color-render-purple)',
             fontSize: '0.9rem', fontWeight: 800, marginBottom: 32, border: '1px solid rgba(139, 92, 246, 0.2)'
           }}>
-            <Smartphone size={16} /> NEW: MOBILE P2P TRANSFERS
+            <Smartphone size={16} /> NEW:GAY
           </div>
           <h1 style={{ fontSize: '5.5rem', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-4px', marginBottom: 32, color: '#000' }}>
             Banking.<br />
