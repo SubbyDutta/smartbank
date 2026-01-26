@@ -18,9 +18,7 @@ import {
 import { jwtDecode } from "jwt-decode";
 import "./LandingPage.css";
 
-// --------------------------------------------------------------------------
-// OPTIMIZED PIXEL GRID (Memoized to prevent unnecessary re-renders)
-// --------------------------------------------------------------------------
+
 const PixelGrid = React.memo(() => {
   const [activeDots, setActiveDots] = useState([]);
 
@@ -65,9 +63,7 @@ const PixelGrid = React.memo(() => {
   );
 });
 
-// --------------------------------------------------------------------------
-// NEW: LIVE TRANSACTION FEED COMPONENT
-// --------------------------------------------------------------------------
+
 const LiveFeed = () => {
   const [items, setItems] = useState([
     { id: 1, type: 'Transfer', amount: '+$540.00', status: 'Success', user: 'Jane D.' },
@@ -162,7 +158,7 @@ export default function LandingPage() {
   const [user, setUser] = useState(null);
   const { scrollY } = useScroll();
 
-  // PERFORMANCE: useSpring for smoother scroll-based scaling/transforms
+  
   const scrollSpring = useSpring(scrollY, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const heroScale = useTransform(scrollSpring, [0, 500], [1, 0.94]);
   const heroOpacity = useTransform(scrollSpring, [0, 300], [1, 0]);
@@ -192,7 +188,7 @@ export default function LandingPage() {
 
       <div className="bg-grid" style={{ opacity: 0.3 }} />
 
-      {/* Navbar - CLEANED UP */}
+     
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 80,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -202,7 +198,7 @@ export default function LandingPage() {
         <div style={{ width: '100%', maxWidth: 1200, padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 32, height: 32, borderRadius: 10, background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 18 }}>S</div>
-            <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.8px' }}>SecureBank</span>
+            <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.8px' }}>SecureBankNotReally</span>
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             {!user ? (
@@ -217,7 +213,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section - UPDATED TO 2-COL WITH LIVE FEED */}
+     
       <section style={{
         paddingTop: 180, paddingBottom: 100, paddingLeft: 24, paddingRight: 24,
         maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 480px)', gap: 80, alignItems: 'center'
@@ -245,7 +241,7 @@ export default function LandingPage() {
           </div>
         </motion.div>
 
-        {/* Right Column: GRID + LIVE FEED */}
+      
         <motion.div
           initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ height: 560, position: 'relative' }}
@@ -255,7 +251,7 @@ export default function LandingPage() {
           <div style={{ position: 'absolute', inset: 32, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 24, zIndex: 2 }}>
             <LiveFeed />
 
-            {/* Large Stat Box Overlay */}
+           
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
               style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', padding: 32, borderRadius: 24, border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 40px 80px rgba(0,0,0,0.1)' }}
@@ -272,7 +268,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Product functionalities Section */}
+     
       <section style={{ padding: '120px 24px', background: '#fafafb', borderTop: '1px solid #f0f0f0' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 80 }}>
@@ -291,7 +287,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Expanded How It Works Section */}
+     
       <section style={{ padding: '140px 24px', maxWidth: 1240, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 120, alignItems: 'center' }}>
           <div style={{ position: 'relative' }}>
@@ -314,7 +310,7 @@ export default function LandingPage() {
                 ))}
               </div>
             </motion.div>
-            {/* Floating badge */}
+           
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: 60, border: '1px dashed rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ fontSize: '0.7rem', fontWeight: 900, color: '#000', textAlign: 'center' }}>100%<br />CLIENT SIDE</div>
             </motion.div>
@@ -331,7 +327,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Global Footer */}
+      
       <footer style={{ padding: '100px 24px 60px', borderTop: '1px solid #f0f0f0', background: '#fff' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 80 }}>
           <div style={{ flex: 1 }}>
