@@ -198,7 +198,7 @@ export default function LandingPage() {
         <div style={{ width: '100%', maxWidth: 1200, padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 32, height: 32, borderRadius: 10, background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 18 }}>S</div>
-            <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.8px' }}>SecureBankNotReally</span>
+            <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.8px' }}>SecureBank(DEMO)</span>
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             {!user ? (
@@ -224,7 +224,7 @@ export default function LandingPage() {
             background: 'var(--color-render-purple-soft)', color: 'var(--color-render-purple)',
             fontSize: '0.9rem', fontWeight: 800, marginBottom: 32, border: '1px solid rgba(139, 92, 246, 0.2)'
           }}>
-            <Smartphone size={16} /> NEW:GAY
+            <Smartphone size={16} /> NEW:P2P MOBILE FRIEDLY
           </div>
           <h1 style={{ fontSize: '5.5rem', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-4px', marginBottom: 32, color: '#000' }}>
             Banking.<br />
